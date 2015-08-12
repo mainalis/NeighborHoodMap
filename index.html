@@ -10,15 +10,36 @@
         src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDDDVyS1F8kz4gk_tpIzMf4z_QGVxixBag">
     </script>
     <script type="text/javascript">
+        var map;
+        var latLng = new google.maps.LatLng(27.717245, 85.323961);
         function initialize() {
             var mapOptions = {
-                center: {lat: 27.717245, lng: 85.323961},
-                zoom: 16
+                center: latLng,
+                zoom: 16,
+                backgroundColor: "#ff0000"
             };
 
-            var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+            var drag = function() {
+                console.log(" Drag is detected");
+            };
+
+
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+            var marker = new google.maps.Marker({
+                position: latLng,
+                title: 'Point A',
+                label: "SUSHIL MAINALI",
+                map: map,
+                draggable: true
+            });
+
+            google.maps.event.addListener(map, 'dragend', function(){ alert('map dragged');});
+            console.log(" Get center "+ JSON.stringify(map.getDiv()));
         }
         google.maps.event.addDomListener(window, 'load', initialize);
+
+
     </script>
 </head>
 
