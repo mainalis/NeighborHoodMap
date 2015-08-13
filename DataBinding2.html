@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>DataBinding 2</title>
+</head>
+<body>
+    <button type="submit" data-bind="text: (isNew()) ? 'Create' :'Update'"></button>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
+    <script>
+        var viewModel = function() {
+            var self = this;
+            self.id = 1;
+
+            self.isNew = function() {
+                console.log("is new is called");
+                    return self.id == 1;
+            };
+        };
+
+        ko.applyBindings(viewModel);
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!
+1. The knockout maintains a parent/child hierarchy of contexts.
+2. every thing is relative to the context we are in.
+3. The root context is ViewModel that was supplied to the ko.applyBindings function.
+
+type of context explanation
+
+$root
+    it is useful to access the root context in any child context and can be useful to know how many parent/child contexts
+    are above the one you are currenty in.
+
+$parent
+    this context is used to access the direct parent context's from the childeren context
+
+$parents
+    similar to the "$parent", it contains the array of the parent contexts to the context yor are currently in.
+
+$data
+    it provides access to the current object your context is in.
+$index
+    this is only available with in foreach binding and contains an integer that represents the current
+    position of the loop starting o and going to the length -1
+--- >
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Binding Context</title>
+</head>
+    <ul data-bind="foreach: books">
+
+        <li data-bind="text: $root"></li>
+
+    </ul>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
+    <script>
+        var viewModel = function() {
+            var self = this;
+            self.books = [
+                    'Rapid Application Development ',
+                    '20 amazing application development in android',
+                    '20 Recipies for programming PhoneGap',
+                    'Mathmatics : Calculas xxx'
+            ];
+        };
+        ko.applyBindings(viewModel);
+
+    </script>
+<body>
+
+</body>
+</html>

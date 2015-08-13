@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>KnockOut PP</title>
+</head>
+<body>
+<h1 data-bind="html : getName()"></h1>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
+<script>
+    function ViewModel() {
+        var self = this;
+        self.name = "Sushil Mainali";
+        self.getName = function() {
+            return 'Hello <em>'+ self.name +'</em>!';
+        };
+    };
+    var viewModel = new ViewModel();
+    ko.applyBindings(viewModel);
+</script>
+
+</body>
+</html>
