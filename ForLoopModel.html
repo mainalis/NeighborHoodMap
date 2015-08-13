@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Using For loop</title>
+</head>
+<body>
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>ISBN</th>
+            <th>Published</th>
+        </tr>
+    </thead>
+    <tbody data-bind="foreach: books">
+        <tr>
+            <td data-bind="text: title"></td>
+            <td data-bind="text: isbn"></td>
+            <td data-bind="text: $parent.formatDate(publishedDate)"></td>
+        </tr>
+    </tbody>
+</table>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
+<script>
+    function ViewModel() {
+        var self = this;
+
+        self.books = [
+            {
+                title: "Book A",
+                isbn: "124568888",
+                author:"Sushil Mainali",
+                publishedDate: "04/13/2015"
+            },
+            {
+                title: "Book B",
+                isbn: "124321147",
+                author:"Early Access",
+                publishedDate: "04/13/2010"
+            },
+            {
+                title: "Book C",
+                isbn: "120785411",
+                author:"Hiroku Nakamura",
+                publishedDate: "12/13/2013"
+            },
+            {
+                title: "Rata Makai ko jawani",
+                isbn: "124568888",
+                author:"Rata Makai",
+                publishedDate: "04/13/2009"
+            }
+        ];
+
+        self.formateDate = function (dateToFormat) {
+            var months = new Array("January", "February", "March", "April", "May", "June","July",
+            "August","September","October","November","December");
+
+            var d = new Date(dateToFormat);
+
+            return months[d.getMonth()] + ' ' + d.getDate() + ', '+
+                    d.getFullYear();
+        };
+
+    };
+
+    var viewModel = new ViewModel();
+    ko.applyBindings();
+</script>
+</body>
+</html>
