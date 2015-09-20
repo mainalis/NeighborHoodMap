@@ -23,9 +23,9 @@
     font-size: 15px;
     font-weight: 300;
     margin-left: 12px;
-    padding: 0 11px 0 13px;
+    padding: 0 0 0 13px;
     text-overflow: ellipsis;
-    width: 300px;
+    width: 90%;
 }
 
 
@@ -49,4 +49,94 @@
     font-weight: 300;
 }
 
+.right-inner-addon {
+    position: relative;
+    border-color: #3e8f3e;
+    border-style: dotted;
+}
 
+.right-inner-addon input {
+    padding-right: 30px;
+}
+
+.right-inner-addon i {
+    position: relative;
+    right: 0px;
+    padding: 10px 12px;
+    pointer-events: none;
+}
+
+
+
+
+
+#map-canvas {
+    height: 500px;
+    margin: 5px;
+    padding: 5px;
+
+
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
+    border-bottom: 1px solid #ccc;
+}
+
+li:last-child {
+    border: none;
+}
+
+li a {
+    text-decoration: none;
+    color: #000;
+    display: block;
+    width: 200px;
+
+    -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
+    -moz-transition: font-size 0.3s ease, background-color 0.3s ease;
+    -o-transition: font-size 0.3s ease, background-color 0.3s ease;
+    -ms-transition: font-size 0.3s ease, background-color 0.3s ease;
+    transition: font-size 0.3s ease, background-color 0.3s ease;
+}
+
+li a:hover {
+    font-size: 30px;
+    background: #f6f6f6;
+}
+
+.input-icon {
+    position: absolute;
+    display: inline-block;
+
+}
+
+.button-top {
+    position:relative;
+    padding:6px 15px;
+    left:-64px;
+    border:1px solid #207cca;
+    background-color:#207cca;
+    padding: 0 0 0 0;
+    color: #fa7a7c;
+
+}
+.button-top:hover  {
+    background-color:#fafafa;
+    color:#207cca;
+}
+
+.c-icon {
+    position:relative;
+    left:-160px;
+}
+
+form {
+    margin:50px auto;
+}
