@@ -6,6 +6,10 @@
 
 }
 
+html,body,.container{
+    height: 100%;
+}
+
 .controls {
     margin-top: 10px;
     border: 1px solid transparent;
@@ -68,25 +72,36 @@
 
 
 
-
+.col-md-9 {
+    height: 100%;
+}
 
 #map-canvas {
-    height: 500px;
+
+    height: inherit;
     margin: 5px;
     padding: 5px;
 
 
 }
 
+.fullscreen {
+    height: 100%;
+}
+
+
+
 ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
+    cursor: default;
 }
 
 li {
     font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
     border-bottom: 1px solid #ccc;
+    cursor: pointer;
 }
 
 li:last-child {
@@ -139,4 +154,8 @@ li a:hover {
 
 form {
     margin:50px auto;
+}
+
+ul li:hover {
+    color: #9ce43a;
 }

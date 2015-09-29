@@ -11,24 +11,31 @@ var searchBox;
 var searchedItem = ko.observableArray();
 var markersOuter = [];
 
-/**
- * Class to hold the searched Item
- * @param name is name of the searche item
- * @param location the location of the place
- * @param type  point of interest
- * @constructor
- */
-var MapItem = function(name, locations, type, imgUrl) {
+
+var MapItem = function(name, locations, type, imageUrl) {
     this.name = name;
     this.locations = locations;
     this.type = type;
-    this.imgUrl = imgUrl;
+    this.imgUrl = imageUrl;
+
+    this.setImgUrl = function(newUrl) {
+        this.imgUrl = newUrl;
+    }
 
 }
 
+/**
+ * To String function for printing the MapItemObject
+ * @returns {string}
+ */
 MapItem.prototype.toString = function mapItemToString() {
-    var ret = 'Name: '+this.name+', locations: '+this.locations+', Type: '+this.type+ ' Imag Url: '+this.imgUrl;
+    var ret = 'Name: '+this.name+', locations: '+this.locations+', Type: '+this.type+ ' Imag Url: ';
     return ret;
+}
+
+
+MapItem.prototype.updateImgUrl = function (imgUrl) {
+    this.imgUrl = imgUrl;
 }
 
 
@@ -173,6 +180,16 @@ function initialize() {
         map.fitBounds(bounds);
     });
 
+
+
+    //var markerList = document.getElementById("marker_list");
+    //console.log("Marker list "+markerList);
+    //
+    //markerList.onclick = function(event) {
+    //var target = event.target;
+    //console.log(" list "+event.target);
+
+
 }
 
 function callback(results, status) {
@@ -227,15 +244,18 @@ function processSearchEntry(searchValue) {
     // iterating through the avaliable places
     for(var i=0; i<searchValue.length;i++) {
         var tempItem = searchValue[i];
-        //console.log(i+" "+ " TYPES "+ tempItem.geometry.location.L );
+        var item = new MapItem(tempItem.name, new google.maps.LatLng(tempItem.geometry.location.H,tempItem.geometry.location.L),
+            tempItem.types[0], "kk" );
 
-        // the information that can be extracted from the places search are
-           // name of place : tempItem.name
-           // rating associated: tempItem.rating
-        // location tempItem.geometry.location.G   tempItem.geometry.location.K
-        // types ---> tempItem.types[0] to tempItem.types[4]
-        searchedItem.push( new MapItem(tempItem.name, new google.maps.LatLng(tempItem.geometry.location.H,tempItem.geometry.location.L), tempItem.types[0]), searchFlickr(tempItem.name));
+        searchedItem.push(item) ;
+        searchFlickr(item);
+
+
     }
+
+    $("#marker_list li").click(function() {
+        handleListClicked($(this).text(), $(this).index());
+    });
 
 };
 
@@ -244,8 +264,11 @@ function searchOnMap(searchText) {
     deleteMarkers();
     var mName;
     var marker;
-    console.log("searchedItem() "+ searchedItem()[0].toString());
+    var imUrl;
+    //console.log("searchedItem() "+ searchedItem()[0].toString());
     for(var i=0; i<searchedItem().length;i++) {
+        //var mIt = searchedItem()[i];
+        //console.log("Searched Item Name "+ mIt.name );
 
         if( searchText.length > 1 && searchedItem()[i].name.startsWith(searchText)) {
            var items = searchedItem()[i].locations;
@@ -255,6 +278,7 @@ function searchOnMap(searchText) {
             //check location things
             //deleteMarkers();
             mName = searchedItem()[i].name;
+            imUrl = searchedItem()[i].imgUrl;
             map.setCenter(searchedItem()[i].locations);
             marker = new google.maps.Marker({
                 map: map,
@@ -262,7 +286,7 @@ function searchOnMap(searchText) {
             });
 
             markersOuter.push(marker);
-            addMarkerSearch(name,marker);
+            addMarkerSearch(mName,marker,imUrl);
             //deleteMarkers();
 
         }
@@ -280,7 +304,6 @@ function searchOnMap(searchText) {
 
 function addMarkerSearch(name, marker, imgurl) {
     google.maps.event.addListener(marker, 'click', function() {
-        //infoWindow.setContent(name);
         infoWindow.setContent(setInfoWindowContent(name, imgurl));
         searchWikipedia(name);
         infoWindow.open(map, marker);
@@ -293,10 +316,9 @@ function addMarkerSearch(name, marker, imgurl) {
  */
 function ViewModel() {
     var self = this;
-
-    self.name = "sushil mainali";
+    self.name = "Searched Location";
     self.getName = function(){
-        return "Hello <em> "+ self.name +"</em>!";
+        return "Current <em> "+ self.name +"</em>!";
     };
     self.sItem = searchedItem;
 
@@ -400,7 +422,7 @@ function searchFlickr(searchItem) {
 
     // 007e580136c66440
     //var Flickurl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&";
-    var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&tags='+searchItem+'&per_page=1&format=json';
+    var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&tags='+searchItem.name+'&per_page=1&format=json';
     var result;
 
 
@@ -411,23 +433,18 @@ function searchFlickr(searchItem) {
             type: 'GET',
             contentType: "application/json; charset=utf-8" ,
             success: function(data, status, xhr) {
-                console.log("Data "+JSON.stringify(data));
+                //console.log("Data "+JSON.stringify(data));
                 var articleList = data[0];
-                //for(var i=0; i< articleList.length; i++) {
-                //    var articleStr = articleList[i];
-                //    console.log(" Value of the ajax "+ articleStr)
-                //    var url = 'http://en.wikipedia.org/wiki/'+articleStr;
-                //    //$wikiElem.append('<li><a href="'+url+'" >' +
-                //    //articleStr + '</a></li>');
-                //}
                 //clearTimeout(wikiRequestTimeout);
-                if(data.length > 0) {
+                if(data.photos.photo.length > 0) {
                     result = 'https://farm'+data.photos.photo[0].farm+'.staticflickr.com/'+data.photos.photo[0].server+
                     '/'+data.photos.photo[0].id+'_'+data.photos.photo[0].secret+'_t.jpg';
-                    console.log("http "+result);
+                     searchItem.setImgUrl(result);
+                    //console.log("http "+result);
                 } else {
-                    result = "";
-                    console.log("££££££ "+ "zero");
+                    result = "No result";
+                    //console.log("££££££ "+ "zero");
+                    searchItem.setImgUrl(result);
                 }
 
 
@@ -435,3 +452,19 @@ function searchFlickr(searchItem) {
         });
     return result;
 }
+
+// handling list click
+
+function handleListClicked(clickedItem, position) {
+    var item = searchedItem()[position];
+    //map.setCenter(markersOuter[position]);
+    console.log("Item "+item.position + "   "+item.name);
+    //google.maps.event.addListener(markersOuter[position], 'click', function() {
+    //    infoWindow.setContent(clickedItem);
+    //    infoWindow.open(map, marker);
+    //});
+
+    google.maps.event.trigger(markersOuter[position],'click');
+
+}
+

@@ -37,21 +37,17 @@
         </div>
 
     </div>
-<div class="row">
+<div class="row fullscreen">
     <div id="place-list" class="col-md-3">
         <div id="knockout" class="col-md-12">
-            <h1  data-bind="html : getName()"></h1>
-
-
-            <ul data-bind="foreach: sItem">
+            <h4  data-bind="html : getName()"></h4>
+            <ul id="marker_list" data-bind="foreach: sItem" >
                 <li data-bind="text: name"> </li>
             </ul>
-
         </div>
     </div>
     <div class="col-md-9">
-
-        <div id="map-canvas" ></div>
+        <div id="map-canvas"></div>
     </div>
 </div>
 
