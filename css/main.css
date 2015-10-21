@@ -6,8 +6,14 @@
 
 }
 
-html,body,.container{
+html,body {
     height: 100%;
+}
+.container{
+    height: 100%;
+    width: 100%;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
 }
 
 .controls {
@@ -26,10 +32,7 @@ html,body,.container{
     font-family: Roboto;
     font-size: 15px;
     font-weight: 300;
-    margin-left: 12px;
-    padding: 0 0 0 13px;
-    text-overflow: ellipsis;
-    width: 90%;
+    width: 100%;
 }
 
 
@@ -134,8 +137,8 @@ li a:hover {
 
 .button-top {
     position:relative;
-    padding:6px 15px;
-    left:-64px;
+    /*padding:6px 15px;
+    left:-64px; */
     border:1px solid #207cca;
     background-color:#207cca;
     padding: 0 0 0 0;
@@ -149,7 +152,7 @@ li a:hover {
 
 .c-icon {
     position:relative;
-    left:-160px;
+    /*left:-160px;*/
 }
 
 form {
@@ -158,4 +161,94 @@ form {
 
 ul li:hover {
     color: #9ce43a;
+    background-color: #204d74;
+}
+
+.container-3{
+    width: 100%;
+    vertical-align: middle;
+    white-space: nowrap;
+    position: relative;
+
+}
+
+.container-3 input#pac-input{
+    width: 100%;
+    height: 50px;
+    background: #2b303b;
+    border: none;
+    font-size: 10pt;
+    float: left;
+    color: #262626;
+    padding-left: 45px;
+    padding-right: 50px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    color: #1b18ff;
+
+    -webkit-transition: background .55s ease;
+    -moz-transition: background .55s ease;
+    -ms-transition: background .55s ease;
+    -o-transition: background .55s ease;
+    transition: background .55s ease;
+}
+
+.container-3 input#pac-input::-webkit-input-placeholder {
+    color: #65737e;
+}
+
+.container-3 input#pac-input:-moz-placeholder { /* Firefox 18- */
+    color: #65737e;
+}
+
+.container-3 input#pac-input::-moz-placeholder {  /* Firefox 19+ */
+    color: #65737e;
+}
+
+.container-3 input#pac-input:-ms-input-placeholder {
+    color: #65737e;
+}
+
+
+.container-3 .glyphicon{
+    position: absolute;
+    top: 50%;
+    margin-left: 20px;
+    margin-top: 20px;
+    z-index: 1;
+
+}
+
+.container-3 input#pac-input:hover, .container-3 input#pac-input:focus, .container-3 input#pac-input:active{
+    outline:none;
+    background: #bfff27;
+}
+
+.container-3 button.go_button{
+
+    -webkit-border-top-right-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -moz-border-radius-bottomright: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+
+    position: absolute;
+    border: none;
+    background: #577474;
+    height: 50px;
+    top: 50%;
+    width: 50px;
+    color: #fa0812;
+    margin-top: 10px;
+    margin-left: -50px;
+    font-size: 10pt;
+
+
+    -webkit-transition: all .55s ease;
+    -moz-transition: all .55s ease;
+    -ms-transition: all .55s ease;
+    -o-transition: all .55s ease;
+    transition: all .55s ease;
 }

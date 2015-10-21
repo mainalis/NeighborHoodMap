@@ -10,16 +10,23 @@ var latLng ;
 var searchBox;
 var searchedItem = ko.observableArray();
 var markersOuter = [];
+var counterWiki = 0;
+var counterFlickr = 0;
 
 
-var MapItem = function(name, locations, type, imageUrl) {
+var MapItem = function(name, locations, type, imageUrl, info) {
     this.name = name;
     this.locations = locations;
     this.type = type;
     this.imgUrl = imageUrl;
+    this.info = info;
 
     this.setImgUrl = function(newUrl) {
         this.imgUrl = newUrl;
+    }
+
+    this.setInfo = function(newInfo) {
+        this.info = info;
     }
 
 }
@@ -29,7 +36,7 @@ var MapItem = function(name, locations, type, imageUrl) {
  * @returns {string}
  */
 MapItem.prototype.toString = function mapItemToString() {
-    var ret = 'Name: '+this.name+', locations: '+this.locations+', Type: '+this.type+ ' Imag Url: ';
+    var ret = 'Name: '+this.name+', locations: '+this.locations+', Type: '+this.type+ ' Image Url: '+this.imgUrl;
     return ret;
 }
 
@@ -44,6 +51,7 @@ function initialize() {
     // longitude and latitude of the initial location kathmandu;
     latLng = new google.maps.LatLng(27.717245, 85.323961);
     infoWindow = new google.maps.InfoWindow();
+
     var mapOptions = {
         center: latLng,
         zoom: 16,
@@ -55,8 +63,7 @@ function initialize() {
     };
 
     // searchBox adding
-    var input = document.getElementById("pac-input")
-    //var optionsSearch = google.maps.places.TextSearchRequest();
+    var input = document.getElementById("pac-input");
 
     // serch box object
     searchBox = new google.maps.places.SearchBox(input);
@@ -66,25 +73,23 @@ function initialize() {
     //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
 
-    var marker = new google.maps.Marker({
-        position: latLng,
-        title: 'Point A',
-        label: "SUSHIL MAINALI",
-        map: map,
-        draggable: true
-    });
+    //var marker = new google.maps.Marker({
+    //    position: latLng,
+    //    title: 'Point A',
+    //    label: "SUSHIL MAINALI",
+    //    map: map,
+    //    draggable: true
+    //});
 
     var request = {
         location: latLng,
-        radius: '1000',
+        radius: '500',
         types: ["restaurant","store","museum","pub"] // restaurant
     };
 
     service = new google.maps.places.PlacesService(map);
     service.nearbySearch(request, callback);
-    // text search
 
-    // service.textSearch(request, callback);
 
     //google.maps.event.addListener(map, 'dragend', function(){ alert('map dragged');});
 
@@ -94,24 +99,28 @@ function initialize() {
 
     var markers = [];
 
+
+    //keyup
+    $('#pac-input').on('keypress keyup', function(e) {
+        var code = e.keyCode || e.which;
+        if (code == 13) {
+            console.log(" enter pressed");
+            e.preventDefault();
+            return false;
+        }else {
+            searchOnMap(input.value);
+        }
+    });
+
     input.onfocus = function() {
       console.log("Getting search box onfocous "+ input.value);
     };
 
-    input.onkeyup = function() {
-        console.log("Onkey up "+ input.value);
-        searchOnMap(input.value);
-    }
 
-    searchBox.addListener('places_changed', function() {
-        console.log("searchBox.addListener "+ searchBox.value);
+
+    $('.go_button').click(function() {
         var places = searchBox.getPlaces();
-
-        // implementing ajax
-
-
-        //console.log("Length of places "+places.length);
-        //console.log("places "+JSON.stringify(places));
+        //console.log(" places "+JSON.stringify(places));
 
         if (places.length == 0) {
             return;
@@ -125,23 +134,25 @@ function initialize() {
                 radius: '1000',
                 types: ["restaurant", "store", "museum", "pub"] // restaurant
             };
-
             service.nearbySearch(mrequest, callback);
-            console.log("Lat lang " + request);
         }
 
         // function calling for displaying searched item to the list
         processSearchEntry(places);
 
         // clear out the old markers
-        markers.forEach(function(marker) {
+        markersOuter.forEach(function(marker) {
             marker.setMap(null);
         });
 
-        markers = [];
+        markersOuter = [];
 
         var bounds = new google.maps.LatLngBounds();
+        var tempMarker;
+        var temInfoWin = new google.maps.InfoWindow();
+
         places.forEach(function(place) {
+
             var icon = {
                 url: place.icon,
                 size: new google.maps.Size(71,71),
@@ -150,24 +161,25 @@ function initialize() {
                 scaledSize: new google.maps.Size(25,25)
             };
 
-            // create marker for each place
-            markers.push(new google.maps.Marker({
+            tempMarker = new google.maps.Marker({
                 map: map,
                 icon: icon,
                 title: place.name,
                 position: place.geometry.location,
-                myIndex: markers.length
-            }));
+                myIndex: markersOuter.length
+            });
+            // create marker for each place
+
 
 
             // binding the action listener to the markers
-            bindMarkerListener(place, infoWindow,map,new google.maps.Marker({
-                map: map,
-                icon: icon,
-                title: place.name,
-                position: place.geometry.location,
-                myIndex: markers.length
-            }) );
+            bindMarkerListener(place,map,tempMarker);
+
+            //google.maps.event.addListener(tempMarker, 'click', function(){
+            //    infoWindow.setContent(place.name)
+            //    infoWindow.open(map, tempMarker);
+            //
+            //});
 
             if (place.geometry.viewport) {
                 // only geocodes have view port
@@ -175,55 +187,52 @@ function initialize() {
             } else {
                 bounds.extend(place.geometry.location);
             }
+
+            markersOuter.push(tempMarker);
         });
 
         map.fitBounds(bounds);
+
     });
-
-
-
-    //var markerList = document.getElementById("marker_list");
-    //console.log("Marker list "+markerList);
-    //
-    //markerList.onclick = function(event) {
-    //var target = event.target;
-    //console.log(" list "+event.target);
+    processYelp(); // processing yelp
 
 
 }
 
 function callback(results, status) {
+
     if(status === google.maps.places.PlacesServiceStatus.OK) {
 
-        //console.log("places "+JSON.stringify(results));
         // storing on observable array
         processSearchEntry(results);
-        for (var i = 0; i < results.length; i++) {
-
-            createMarker(results[i]);
-        }
-
+        // creating marker and storing to the arrary
+        createMarker();
     }
 };
 
-function createMarker(place) {
+function createMarker() {  //place
 
-    var marker = new google.maps.Marker({
-        map: map,
-        position: place.geometry.location
-    });
+    // iterating each and every element of list
+    for(var i=0; i<searchedItem().length;i++) {
+        var items = searchedItem()[i];
+        var marker = new google.maps.Marker({
+            map: map,
+            position: items.locations
+        });
 
-    markersOuter.push(marker);
+        markersOuter.push(marker);
 
-    google.maps.event.addListener(marker, 'click', function() {
-        infoWindow.setContent(place.name);
-        infoWindow.open(map, marker);
-    });
+        //addMarkerSearch(items.name,marker,items.imgUrl, items.info);
+
+    }
+
+    console.log(" Inside marker called "+ searchedItem()[0]);
 };
 /**
  * Function for binding the marker and its info window
  */
-function bindMarkerListener(place,infoWindow, map, marker) {
+function bindMarkerListener(place, map, marker) {
+
     google.maps.event.addListener(marker, 'click', function(){
         infoWindow.setContent(place.name)
         infoWindow.open(map, marker);
@@ -238,24 +247,22 @@ function bindMarkerListener(place,infoWindow, map, marker) {
 function processSearchEntry(searchValue) {
     // removing item from the observable list
     // clearing knocokout observable list
-    console.log("process search entry called ");
+
     searchedItem.removeAll();
 
     // iterating through the avaliable places
     for(var i=0; i<searchValue.length;i++) {
+
         var tempItem = searchValue[i];
-        var item = new MapItem(tempItem.name, new google.maps.LatLng(tempItem.geometry.location.H,tempItem.geometry.location.L),
-            tempItem.types[0], "kk" );
-
+        var item = new MapItem(tempItem.name, new google.maps.LatLng(tempItem.geometry.location.lat(),
+                tempItem.geometry.location.lng()),
+                tempItem.types[0], "kk", "default" );
         searchedItem.push(item) ;
-        searchFlickr(item);
-
-
+        searchFlickr(searchedItem()[i]);
+        searchWikipedia(searchedItem()[i])
     }
 
-    $("#marker_list li").click(function() {
-        handleListClicked($(this).text(), $(this).index());
-    });
+    addListListener();
 
 };
 
@@ -265,20 +272,19 @@ function searchOnMap(searchText) {
     var mName;
     var marker;
     var imUrl;
+    var tempObs = ko.observableArray();
+    var info;
+
     //console.log("searchedItem() "+ searchedItem()[0].toString());
     for(var i=0; i<searchedItem().length;i++) {
-        //var mIt = searchedItem()[i];
-        //console.log("Searched Item Name "+ mIt.name );
 
-        if( searchText.length > 1 && searchedItem()[i].name.startsWith(searchText)) {
+        if( searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())) {
+
            var items = searchedItem()[i].locations;
-            //console.log("Searched item "+ items);
-           //console.log("££££££ " + searchedItem()[i].name);
-           //console.log("###### "+searchedItem()[i].location);
             //check location things
-            //deleteMarkers();
             mName = searchedItem()[i].name;
             imUrl = searchedItem()[i].imgUrl;
+            info = searchedItem()[i].info;
             map.setCenter(searchedItem()[i].locations);
             marker = new google.maps.Marker({
                 map: map,
@@ -286,11 +292,19 @@ function searchOnMap(searchText) {
             });
 
             markersOuter.push(marker);
-            addMarkerSearch(mName,marker,imUrl);
+            addMarkerSearch(mName,marker,imUrl, info);
             //deleteMarkers();
+            tempObs.push(searchedItem()[i]);
 
         }
 
+    }
+
+    if(tempObs().length > 0) {
+
+        searchedItem.removeAll();
+        searchedItem((tempObs().slice()));//= tempObs;
+        addListListener();
     }
 
 
@@ -302,10 +316,11 @@ function searchOnMap(searchText) {
  * @param marker marker object of location
  */
 
-function addMarkerSearch(name, marker, imgurl) {
+function addMarkerSearch(name, marker, imgurl, info) {
+
     google.maps.event.addListener(marker, 'click', function() {
-        infoWindow.setContent(setInfoWindowContent(name, imgurl));
-        searchWikipedia(name);
+        infoWindow.setContent(setInfoWindowContent(name, imgurl, info));
+        //searchWikipedia(name);
         infoWindow.open(map, marker);
     });
 
@@ -321,11 +336,12 @@ function ViewModel() {
         return "Current <em> "+ self.name +"</em>!";
     };
     self.sItem = searchedItem;
+    //disableOnEnterPress();
 
 };
 
 var viewModel = new ViewModel();
-ko.applyBindings(viewModel);
+ko.applyBindings(viewModel,  document.getElementById('marker_list'));
 
 // Sets the map on all markers in the array.
 function setMapOnAll(map) {
@@ -342,7 +358,6 @@ function clearMarkers() {
 // delete all markers
 function deleteMarkers() {
     clearMarkers();
-    //markers = [];
 };
 
 
@@ -360,31 +375,29 @@ var infoWindow = new google.maps.infoWindow({
     content: infoWindowContent
 });
 
-function setInfoWindowContent(name, imgurl) {
+function setInfoWindowContent(name, imgurl, info) {
    // var tt= searchFlickr(name);
 
     var kk = '<div class="info_content">' +
         '<h3> '+name+' </h3>' +
         '<img src='+imgurl+'/>'+
-        '<p>Info goes here </p>'+
+        '<p>'+info+'</p>'+
         '</div>';
 
     return kk;
 }
 // ajax loading of info to the info window on marker
 
-        // testing with wikipedia
 
 
-
+// testing with wikipedia
 function searchWikipedia(placeName) {
 
     var wikiUrl = 'https://en.wikipedia.org/w/api.php?action=opensearch&'+
-        'search='+placeName+'&format=json&callback=wikiCallback';
+        'search=' + placeName.name + '&format=json&callback=wikiCallback';
+
     var wikiRequestTimeout = setTimeout(function(){
 
-        //$wikiElem.text("Failed to get wikipedia resources");
-        console.log("Info not available");
     }, 8000);
     $.ajax({
         url:wikiUrl,
@@ -392,22 +405,17 @@ function searchWikipedia(placeName) {
         type: 'GET',
         contentType: "application/json; charset=utf-8",
         success: function(data, status, xhr) {
-            console.log("Data "+data);
+            //console.log("Data "+data);
             var articleList = data[0];
-            for(var i=0; i< articleList.length; i++) {
-                var articleStr = articleList[i];
-                //console.log(" Value of the ajax "+ articleStr)
-                var url = 'http://en.wikipedia.org/wiki/'+articleStr;
+            var url = 'http://en.wikipedia.org/wiki/'+articleList;
+            placeName.info = url;
+            //console.log(("wiki url "+url));
+            counterMarker('wikipedia');
                 //$wikiElem.append('<li><a href="'+url+'" >' +
                 //articleStr + '</a></li>');
-            }
             clearTimeout(wikiRequestTimeout);
         }
     });
-
-    // https://en.wikipedia.org/w/api.php?action=opensearch&+
-    //search="Nanglo Bakery"&format=json&callback=wikiCallback
-
 
 
 };
@@ -418,11 +426,9 @@ function searchWikipedia(placeName) {
 
 function searchFlickr(searchItem) {
 
-    // 8ff629a31a05d902a75b1d86d9b05730
-
-    // 007e580136c66440
     //var Flickurl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&";
-    var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&tags='+searchItem.name+'&per_page=1&format=json';
+    var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&tags='
+        +searchItem.name+'&per_page=1&format=json';
     var result;
 
 
@@ -433,38 +439,170 @@ function searchFlickr(searchItem) {
             type: 'GET',
             contentType: "application/json; charset=utf-8" ,
             success: function(data, status, xhr) {
-                //console.log("Data "+JSON.stringify(data));
+
                 var articleList = data[0];
                 //clearTimeout(wikiRequestTimeout);
                 if(data.photos.photo.length > 0) {
+
                     result = 'https://farm'+data.photos.photo[0].farm+'.staticflickr.com/'+data.photos.photo[0].server+
                     '/'+data.photos.photo[0].id+'_'+data.photos.photo[0].secret+'_t.jpg';
-                     searchItem.setImgUrl(result);
-                    //console.log("http "+result);
+                     //searchItem.setImgUrl(result);
+                     searchItem.imgUrl = result;
+
                 } else {
-                    result = "No result";
-                    //console.log("££££££ "+ "zero");
-                    searchItem.setImgUrl(result);
+
+                    result = "img/photo_not_available.png";
+                    searchItem.imgUrl = result;
+
                 }
 
+                counterMarker('flickr');
+
+            },
+            error: function(request, error) {
 
             }
         });
+
     return result;
 }
 
 // handling list click
 
 function handleListClicked(clickedItem, position) {
+
     var item = searchedItem()[position];
-    //map.setCenter(markersOuter[position]);
-    console.log("Item "+item.position + "   "+item.name);
-    //google.maps.event.addListener(markersOuter[position], 'click', function() {
-    //    infoWindow.setContent(clickedItem);
-    //    infoWindow.open(map, marker);
-    //});
+    var len = markersOuter.length;
 
-    google.maps.event.trigger(markersOuter[position],'click');
+    var pos = -1;
+    while(len-- ) {
 
+        if((markersOuter[len].position.lat() == item.locations.lat()) &&
+            (markersOuter[len].position.lng() == item.locations.lng() )) {
+
+            pos = len;
+            break;
+        }
+    }
+
+    if(pos === -1) {
+        pos = 0;
+    }
+
+    google.maps.event.trigger(markersOuter[pos],'click');
+
+}
+
+
+function addListListener() {
+    $("#marker_list li").click(function() {
+        //console.log("clicked on list");
+        handleListClicked($(this).text(), $(this).index());
+    });
+}
+
+function disableOnEnterPress() {
+
+    $('#pac-input').on('keyup keypress', function(e) {
+        var code = e.keyCode || e.which;
+        if (code == 13) {
+            console.log(" enter pressed");
+            e.preventDefault();
+            return false;
+        }
+    });
+}
+
+function loadButton() {
+    $('.go_button').onclick()
+}
+
+
+function nonce_generate() {
+    return (Math.floor(Math.random() * 1e12).toString());
+}
+
+// yelp access with oauth
+
+function processYelp() {
+
+    // need a way to hiding consumer key and token
+
+    var consumer_key = "n7Xp4IsnMZLAVuuyVjz-hA";
+    var consumer_secret = "KUbgJZlaNi69BKOVII5iI-QC-aI";
+    var token = "RB_d80kXSa3sHeiEW7_tBBH2-DAfp572";
+    var token_secret = "60tGsaUF8Sn4jDy4vI4ySYxn5yU";
+    var YELP_BASE_URL = 'https://api.yelp.com/v2/search'; // search /?location=
+    var src = 'San Francisco';
+
+    var yelp_url = YELP_BASE_URL;//+ self.selected_place().Yelp.business_id;
+
+    var parameters = {
+        oauth_consumer_key: consumer_key,
+        oauth_token: token,
+        oauth_nonce: nonce_generate(),
+        oauth_timestamp: Math.floor(Date.now()/1000),
+        oauth_signature_method: 'HMAC-SHA1',
+        oauth_version : '1.0',
+        callback: 'cb',              // This is crucial to include for jsonp implementation in AJAX or else the oauth-signature will be wrong.
+        location: 'San Francisco',
+        term: 'cafe'
+
+    };
+
+    var encodedSignature = oauthSignature.generate('GET',yelp_url, parameters, consumer_secret,token_secret);
+    parameters.oauth_signature = encodedSignature;
+
+    var settings = {
+        url: yelp_url,
+        data: parameters,
+        cache: true,                // This is crucial to include as well to prevent jQuery from adding on a cache-buster parameter "_=23489489749837", invalidating our oauth-signature
+        dataType: 'jsonp',
+        success: function(results) {
+            // Do stuff with results
+            //console.log("success "+ JSON.stringify(results));
+        },
+        error: function() {
+            // Do stuff on fail
+        }
+    };
+
+    // Send AJAX query via jQuery library.
+    $.ajax(settings);
+
+}
+
+
+function counterMarker(calledFunction) {
+
+
+    //if(counterFlickr === 19) {
+    //    for(var i=0; i<searchedItem().length;i++) {
+    //        var items = searchedItem()[i];
+    //        addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
+    //
+    //    }
+    //}  //if(counterFlickr === 19) {
+    //    for(var i=0; i<searchedItem().length;i++) {
+    //        var items = searchedItem()[i];
+    //        addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
+    //
+    //    }
+    //}
+
+    if(calledFunction === 'flickr') {
+        counterFlickr++;
+    } else if(calledFunction === 'wikipedia') {
+        counterWiki++;
+    }
+
+    if(counterFlickr == searchedItem().length &&
+        counterWiki == searchedItem().length) {
+
+        for(var i=0; i<searchedItem().length;i++) {
+            var items = searchedItem()[i];
+            addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
+        }
+    }
 }
 

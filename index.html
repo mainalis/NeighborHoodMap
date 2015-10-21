@@ -14,10 +14,22 @@
     <script type="text/javascript"
             src="http://code.jquery.com/jquery-2.1.1.min.js"
             ></script>
+    <script type="text/javascript" src="js/hmac-sha1.js"></script>
+    <script type="text/javascript" src="js/enc-base64-min.js"></script>
+    <script type="text/javascript" src="js/url.min.js"></script>
+    <script type="text/javascript" src="js/oauth-signature.js"></script>
+
 
     <!--
     <script type="text/javascript"
         src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDDDVyS1F8kz4gk_tpIzMf4z_QGVxixBag">
+                <div class ="search_box">
+
+            <input id="pac-input" class="controls" type="text" placeholder="Search place.....">   </input>
+            <input type="button" class="button-top" value="Search">
+            <i class="glyphicon glyphicon-camera c-icon"></i>
+
+        </div>
 
     </script>
     -->
@@ -27,19 +39,18 @@
 
 
 <div class="container">
-    <div class="row">
-        <div class ="col-md-12">
 
-                <input id="pac-input" class="controls" type="text" placeholder="Search place.....">   </input>
-                <input type="button" class="button-top" value="Search">
-                <i class="glyphicon glyphicon-camera c-icon"></i>
-
-        </div>
-
-    </div>
 <div class="row fullscreen">
     <div id="place-list" class="col-md-3">
-        <div id="knockout" class="col-md-12">
+        <div class="box">
+            <div class="container-3">
+                <span class="icon glyphicon glyphicon-search"><i class="fa fa-search"></i></span>
+                <input type="search" id="pac-input" class="controls"  placeholder="Search..." />
+                <button class="go_button">Go</button>
+            </div>
+        </div>
+
+        <div id="knockout">
             <h4  data-bind="html : getName()"></h4>
             <ul id="marker_list" data-bind="foreach: sItem" >
                 <li data-bind="text: name"> </li>
@@ -56,6 +67,7 @@
 
 <script type="text/javascript"
         src = "https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=places&callback=initialize" async defer></script>
+
 
 <!-- <script type="text/javascript" src="js/viewModel.js"></script> -->
 <script type="text/javascript" src="js/map.js"></script>
