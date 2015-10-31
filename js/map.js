@@ -49,7 +49,8 @@ MapItem.prototype.updateImgUrl = function (imgUrl) {
 function initialize() {
 
     // longitude and latitude of the initial location kathmandu;
-    latLng = new google.maps.LatLng(27.717245, 85.323961);
+    // london long  lat 51.501049, -0.026093
+    latLng = new google.maps.LatLng(51.501049, -0.026093);
     infoWindow = new google.maps.InfoWindow();
 
     var mapOptions = {
@@ -73,13 +74,6 @@ function initialize() {
     //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
 
 
-    //var marker = new google.maps.Marker({
-    //    position: latLng,
-    //    title: 'Point A',
-    //    label: "SUSHIL MAINALI",
-    //    map: map,
-    //    draggable: true
-    //});
 
     var request = {
         location: latLng,
@@ -194,8 +188,8 @@ function initialize() {
         map.fitBounds(bounds);
 
     });
-    processYelp(); // processing yelp
-
+    //processYelp(); // processing yelp
+    yelpBusinessSearch();
 
 }
 
@@ -258,7 +252,8 @@ function processSearchEntry(searchValue) {
                 tempItem.geometry.location.lng()),
                 tempItem.types[0], "kk", "default" );
         searchedItem.push(item) ;
-        searchFlickr(searchedItem()[i]);
+        //searchFlickr(searchedItem()[i]);
+        yelpBusinessSearch(searchedItem()[i])
         searchWikipedia(searchedItem()[i])
     }
 
@@ -451,7 +446,7 @@ function searchFlickr(searchItem) {
 
                 } else {
 
-                    result = "img/photo_not_available.png";
+                    result = "img/rsz_photo_not_available1.png";
                     searchItem.imgUrl = result;
 
                 }
@@ -545,7 +540,7 @@ function processYelp() {
         oauth_signature_method: 'HMAC-SHA1',
         oauth_version : '1.0',
         callback: 'cb',              // This is crucial to include for jsonp implementation in AJAX or else the oauth-signature will be wrong.
-        location: 'San Francisco',
+        location: 'coventry',
         term: 'cafe'
 
     };
@@ -576,20 +571,6 @@ function processYelp() {
 function counterMarker(calledFunction) {
 
 
-    //if(counterFlickr === 19) {
-    //    for(var i=0; i<searchedItem().length;i++) {
-    //        var items = searchedItem()[i];
-    //        addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
-    //
-    //    }
-    //}  //if(counterFlickr === 19) {
-    //    for(var i=0; i<searchedItem().length;i++) {
-    //        var items = searchedItem()[i];
-    //        addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
-    //
-    //    }
-    //}
-
     if(calledFunction === 'flickr') {
         counterFlickr++;
     } else if(calledFunction === 'wikipedia') {
@@ -603,6 +584,58 @@ function counterMarker(calledFunction) {
             var items = searchedItem()[i];
             addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
         }
+
+        counterFlickr = 0;
+        counterWiki = 0;
     }
+}
+
+
+
+function yelpBusinessSearch(bussiness) {
+
+
+    // need a way to hiding consumer key and token
+
+    var consumer_key = "n7Xp4IsnMZLAVuuyVjz-hA";
+    var consumer_secret = "KUbgJZlaNi69BKOVII5iI-QC-aI";
+    var token = "RB_d80kXSa3sHeiEW7_tBBH2-DAfp572";
+    var token_secret = "60tGsaUF8Sn4jDy4vI4ySYxn5yU";
+    var YELP_BASE_URL ='https://api.yelp.com/v2/business/'; // search /?location=
+    var src = bussiness.name+'-london';//'city-arms-coventry';//
+
+    var yelp_url = YELP_BASE_URL+src;//+ self.selected_place().Yelp.business_id;
+
+    var parameters = {
+        oauth_consumer_key: consumer_key,
+        oauth_token: token,
+        oauth_nonce: nonce_generate(),
+        oauth_timestamp: Math.floor(Date.now()/1000),
+        oauth_signature_method: 'HMAC-SHA1',
+        oauth_version : '1.0',
+        callback: 'cb'             // This is crucial to include for jsonp implementation in AJAX or else the oauth-signature will be wrong.
+
+    };
+
+    var encodedSignature = oauthSignature.generate('GET',yelp_url, parameters, consumer_secret,token_secret);
+    parameters.oauth_signature = encodedSignature;
+
+    var settings = {
+        url: yelp_url,
+        data: parameters,
+        cache: true,                // This is crucial to include as well to prevent jQuery from adding on a cache-buster parameter "_=23489489749837", invalidating our oauth-signature
+        dataType: 'jsonp',
+        success: function(results) {
+            // Do stuff with results
+            //console.log("success "+ JSON.stringify(results));
+            console.log(" --- - "+results.mobile_url);
+        },
+        error: function() {
+            // Do stuff on fail
+        }
+    };
+
+    // Send AJAX query via jQuery library.
+    $.ajax(settings);
 }
 
