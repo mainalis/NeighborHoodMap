@@ -12,7 +12,7 @@ var searchedItem = ko.observableArray();
 var markersOuter = [];
 var counterWiki = 0;
 var counterFlickr = 0;
-
+var counterYelp = 0;
 
 var MapItem = function(name, locations, type, imageUrl, info) {
     this.name = name;
@@ -189,7 +189,7 @@ function initialize() {
 
     });
     //processYelp(); // processing yelp
-    yelpBusinessSearch();
+    //yelpBusinessSearch();
 
 }
 
@@ -206,6 +206,8 @@ function callback(results, status) {
 
 function createMarker() {  //place
 
+
+
     // iterating each and every element of list
     for(var i=0; i<searchedItem().length;i++) {
         var items = searchedItem()[i];
@@ -215,12 +217,13 @@ function createMarker() {  //place
         });
 
         markersOuter.push(marker);
+        console.log("Marker "+marker.position);
 
         //addMarkerSearch(items.name,marker,items.imgUrl, items.info);
 
     }
 
-    console.log(" Inside marker called "+ searchedItem()[0]);
+    //console.log(" Inside marker called "+ searchedItem()[0]);
 };
 /**
  * Function for binding the marker and its info window
@@ -252,7 +255,7 @@ function processSearchEntry(searchValue) {
                 tempItem.geometry.location.lng()),
                 tempItem.types[0], "kk", "default" );
         searchedItem.push(item) ;
-        //searchFlickr(searchedItem()[i]);
+        searchFlickr(searchedItem()[i]);
         yelpBusinessSearch(searchedItem()[i])
         searchWikipedia(searchedItem()[i])
     }
@@ -466,6 +469,7 @@ function searchFlickr(searchItem) {
 
 function handleListClicked(clickedItem, position) {
 
+
     var item = searchedItem()[position];
     var len = markersOuter.length;
 
@@ -484,12 +488,15 @@ function handleListClicked(clickedItem, position) {
         pos = 0;
     }
 
+    //console.log("pos "+JSON.parse(markersOuter[pos]));
+
     google.maps.event.trigger(markersOuter[pos],'click');
 
 }
 
 
 function addListListener() {
+    console.log("The add listener is called 493");
     $("#marker_list li").click(function() {
         //console.log("clicked on list");
         handleListClicked($(this).text(), $(this).index());
@@ -575,18 +582,22 @@ function counterMarker(calledFunction) {
         counterFlickr++;
     } else if(calledFunction === 'wikipedia') {
         counterWiki++;
+    } else if(calledFunction === 'yelp') {
+        counterYelp++;
     }
-
+    console.log(" counter yelp "+counterYelp);
     if(counterFlickr == searchedItem().length &&
-        counterWiki == searchedItem().length) {
+        counterWiki == searchedItem().length &&
+        counterYelp == searchedItem().length) {
 
         for(var i=0; i<searchedItem().length;i++) {
             var items = searchedItem()[i];
             addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
         }
-
+        console.log("marker counter is called");
         counterFlickr = 0;
         counterWiki = 0;
+        counterYelp = 0;
     }
 }
 
@@ -625,17 +636,37 @@ function yelpBusinessSearch(bussiness) {
         data: parameters,
         cache: true,                // This is crucial to include as well to prevent jQuery from adding on a cache-buster parameter "_=23489489749837", invalidating our oauth-signature
         dataType: 'jsonp',
+        crossDomain: true,
+        statusCode: {
+            400 : function(xhr) {
+                console.log("400 catch");
+            }
+        },
         success: function(results) {
             // Do stuff with results
             //console.log("success "+ JSON.stringify(results));
-            console.log(" --- - "+results.mobile_url);
+            //console.log(" --- - "+results.mobile_url);
+            counterMarker('yelp');
         },
+
         error: function() {
             // Do stuff on fail
-        }
+        } ,
+
     };
 
-    // Send AJAX query via jQuery library.
-    $.ajax(settings);
+
+
+
+    try {
+        // Send AJAX query via jQuery library.
+        $.ajax(settings).fail( function(jqXHR, textStatus, errorThrown) {
+            //console.log("error");
+            counterMarker('yelp');
+        });
+
+    } catch(err) {
+        console.log(" error "+err);
+    }
 }
 
