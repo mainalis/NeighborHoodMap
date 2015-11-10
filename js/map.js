@@ -23,13 +23,13 @@ var MapItem = function(name, locations, type, imageUrl, info) {
 
     this.setImgUrl = function(newUrl) {
         this.imgUrl = newUrl;
-    }
+    };
 
     this.setInfo = function(newInfo) {
         this.info = info;
     }
 
-}
+};
 
 /**
  * To String function for printing the MapItemObject
@@ -38,12 +38,12 @@ var MapItem = function(name, locations, type, imageUrl, info) {
 MapItem.prototype.toString = function mapItemToString() {
     var ret = 'Name: '+this.name+', locations: '+this.locations+', Type: '+this.type+ ' Image Url: '+this.imgUrl;
     return ret;
-}
+};
 
 
 MapItem.prototype.updateImgUrl = function (imgUrl) {
     this.imgUrl = imgUrl;
-}
+};
 
 
 function initialize() {
@@ -118,8 +118,7 @@ function initialize() {
 
         if (places.length == 0) {
             return;
-        };
-
+        }
         if(places.length == 1) {
 
             latLng = new google.maps.LatLng(places[0].geometry.location.G, places[0].geometry.location.K);
@@ -202,8 +201,7 @@ function callback(results, status) {
         // creating marker and storing to the arrary
         createMarker();
     }
-};
-
+}
 function createMarker() {  //place
 
 
@@ -217,25 +215,65 @@ function createMarker() {  //place
         });
 
         markersOuter.push(marker);
-        console.log("Marker "+marker.position);
 
         //addMarkerSearch(items.name,marker,items.imgUrl, items.info);
 
     }
 
-    //console.log(" Inside marker called "+ searchedItem()[0]);
-};
+    // applying custom layout to the info window
+    google.maps.event.addListener(infoWindow, 'domready', function(){
+
+        var iwOuter = $('.gm-style-iw');
+
+        var iwBackground = iwOuter.prev();
+
+        // Removes background shadow DIV
+        iwBackground.children(':nth-child(2)').css({'display' : 'none'});
+
+        // Removes white background DIV
+        iwBackground.children(':nth-child(4)').css({'display' : 'none'});
+
+        // Moves the infowindow 115px to the right.
+        iwOuter.parent().parent().css({left: '115px'});
+
+        // Moves the shadow of the arrow 76px to the left margin.
+        iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
+
+        // Moves the arrow 76px to the left margin.
+        iwBackground.children(':nth-child(3)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
+
+        // Changes the desired tail shadow color.
+        iwBackground.children(':nth-child(3)').find('div').children().css({'box-shadow': 'rgba(72, 181, 233, 0.6) 0px 1px 6px', 'z-index' : '1'});
+
+        // Reference to the div that groups the close button elements.
+        var iwCloseBtn = iwOuter.next();
+
+        // Apply the desired effect to the close button
+        iwCloseBtn.css({opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
+
+        //if($('.info_content').height() < 140){
+        //    $('.iw-bottom-gradient').css({display: 'none'});
+        //}
+
+        iwCloseBtn.mouseout(function(){
+            $(this).css({opacity: '1'});
+        });
+
+
+    });
+
+}
 /**
  * Function for binding the marker and its info window
  */
 function bindMarkerListener(place, map, marker) {
 
     google.maps.event.addListener(marker, 'click', function(){
-        infoWindow.setContent(place.name)
+        infoWindow.setContent(place.name);
         infoWindow.open(map, marker);
 
     });
-};
+}
 //google.maps.event.addDomListener(window, 'load', initialize);
 /**
  * Function for processing the search content of the map
@@ -256,15 +294,13 @@ function processSearchEntry(searchValue) {
                 tempItem.types[0], "kk", "default" );
         searchedItem.push(item) ;
         searchFlickr(searchedItem()[i]);
-        yelpBusinessSearch(searchedItem()[i])
+        yelpBusinessSearch(searchedItem()[i]);
         searchWikipedia(searchedItem()[i])
     }
 
     addListListener();
 
-};
-
-
+}
 function searchOnMap(searchText) {
     deleteMarkers();
     var mName;
@@ -306,8 +342,7 @@ function searchOnMap(searchText) {
     }
 
 
-};
-
+}
 /**
  * Function for adding action listener on each marker
  * @param name name to display on infowindow
@@ -336,8 +371,7 @@ function ViewModel() {
     self.sItem = searchedItem;
     //disableOnEnterPress();
 
-};
-
+}
 var viewModel = new ViewModel();
 ko.applyBindings(viewModel,  document.getElementById('marker_list'));
 
@@ -346,23 +380,19 @@ function setMapOnAll(map) {
     for (var i = 0; i < markersOuter.length; i++) {
         markersOuter[i].setMap(map);
     }
-};
-
+}
 // clear markers
 function clearMarkers() {
     setMapOnAll(null);
-};
-
+}
 // delete all markers
 function deleteMarkers() {
     clearMarkers();
-};
-
-
-
+}
 // display helper for the map infowindow
 
 var infoWindowContent = '<div class="info_content">' +
+
         '<h3> content </h3>' +
         '<p>Info goes here </p>'+
         '</div>';
@@ -370,19 +400,36 @@ var infoWindowContent = '<div class="info_content">' +
 // initialize the infowindow
 
 var infoWindow = new google.maps.infoWindow({
-    content: infoWindowContent
+    content: infoWindowContent,
+    maxWidth: 350
 });
 
 function setInfoWindowContent(name, imgurl, info) {
    // var tt= searchFlickr(name);
 
-    var kk = '<div class="info_content">' +
-        '<h3> '+name+' </h3>' +
+    var content = '<div id="info_container">' +
+        '<div class="content_title"> '+name+'</div>'+
+        '<div class="info_content>" '+
         '<img src='+imgurl+'/>'+
-        '<p>'+info+'</p>'+
+        //'<p>'+info+'</p>'+
+        '</div>'+
         '</div>';
 
-    return kk;
+
+    //var content = '<div id="iw-container">' +
+    //    '<div class="iw-title">Porcelain Factory of Vista Alegre</div>' +
+    //    '<div class="iw-content">' +
+    //    '<div class="iw-subTitle">History</div>' +
+    //    '<img src="http://maps.marnoto.com/en/5wayscustomizeinfowindow/images/vistalegre.jpg" alt="Porcelain Factory of Vista Alegre" height="115" width="83">' +
+    //    '<p>Founded in 1824, the Porcelain Factory of Vista Alegre was the first industrial unit dedicated to porcelain production in Portugal. For the foundation and success of this risky industrial development was crucial the spirit of persistence of its founder, José Ferreira Pinto Basto. Leading figure in Portuguese society of the nineteenth century farm owner, daring dealer, wisely incorporated the liberal ideas of the century, having become "the first example of free enterprise" in Portugal.</p>' +
+    //    '<div class="iw-subTitle">Contacts</div>' +
+    //    '<p>VISTA ALEGRE ATLANTIS, SA<br>3830-292 Ílhavo - Portugal<br>'+
+    //    '<br>Phone. +351 234 320 600<br>e-mail: geral@vaa.pt<br>www: www.myvistaalegre.com</p>'+
+    //    '</div>' +
+    //    '<div class="iw-bottom-gradient"></div>' +
+    //    '</div>';
+
+    return content;
 }
 // ajax loading of info to the info window on marker
 
@@ -416,9 +463,7 @@ function searchWikipedia(placeName) {
     });
 
 
-};
-
-
+}
 // flickr
 
 
@@ -444,6 +489,7 @@ function searchFlickr(searchItem) {
 
                     result = 'https://farm'+data.photos.photo[0].farm+'.staticflickr.com/'+data.photos.photo[0].server+
                     '/'+data.photos.photo[0].id+'_'+data.photos.photo[0].secret+'_t.jpg';
+                    //console.log("flickr "+result);
                      //searchItem.setImgUrl(result);
                      searchItem.imgUrl = result;
 
@@ -496,7 +542,7 @@ function handleListClicked(clickedItem, position) {
 
 
 function addListListener() {
-    console.log("The add listener is called 493");
+
     $("#marker_list li").click(function() {
         //console.log("clicked on list");
         handleListClicked($(this).text(), $(this).index());
@@ -508,7 +554,6 @@ function disableOnEnterPress() {
     $('#pac-input').on('keyup keypress', function(e) {
         var code = e.keyCode || e.which;
         if (code == 13) {
-            console.log(" enter pressed");
             e.preventDefault();
             return false;
         }
@@ -585,7 +630,7 @@ function counterMarker(calledFunction) {
     } else if(calledFunction === 'yelp') {
         counterYelp++;
     }
-    console.log(" counter yelp "+counterYelp);
+
     if(counterFlickr == searchedItem().length &&
         counterWiki == searchedItem().length &&
         counterYelp == searchedItem().length) {
@@ -594,7 +639,6 @@ function counterMarker(calledFunction) {
             var items = searchedItem()[i];
             addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
         }
-        console.log("marker counter is called");
         counterFlickr = 0;
         counterWiki = 0;
         counterYelp = 0;
