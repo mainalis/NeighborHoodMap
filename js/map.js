@@ -20,6 +20,10 @@ var MapItem = function(name, locations, type, imageUrl, info) {
     this.type = type;
     this.imgUrl = imageUrl;
     this.info = info;
+    this.review = "notFound";
+    this.rating = "00:00:00";
+
+    // setter for the MpItem attributes
 
     this.setImgUrl = function(newUrl) {
         this.imgUrl = newUrl;
@@ -27,6 +31,14 @@ var MapItem = function(name, locations, type, imageUrl, info) {
 
     this.setInfo = function(newInfo) {
         this.info = info;
+    };
+
+    this.setReview = function(newReview) {
+        this.review = newReview;
+    };
+
+    this.setRating = function(newRating) {
+        this.rating = newRating;
     }
 
 };
@@ -48,8 +60,6 @@ MapItem.prototype.updateImgUrl = function (imgUrl) {
 
 function initialize() {
 
-    // longitude and latitude of the initial location kathmandu;
-    // london long  lat 51.501049, -0.026093
     latLng = new google.maps.LatLng(51.501049, -0.026093);
     infoWindow = new google.maps.InfoWindow();
 
@@ -71,9 +81,6 @@ function initialize() {
 
     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
-    //map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
-
 
     var request = {
         location: latLng,
@@ -84,9 +91,6 @@ function initialize() {
     service = new google.maps.places.PlacesService(map);
     service.nearbySearch(request, callback);
 
-
-    //google.maps.event.addListener(map, 'dragend', function(){ alert('map dragged');});
-
     map.addListener('bounds_changed', function() {
         searchBox.setBounds(map.getBounds());
     });
@@ -94,7 +98,7 @@ function initialize() {
     var markers = [];
 
 
-    //keyup
+    //keyup action listener
     $('#pac-input').on('keypress keyup', function(e) {
         var code = e.keyCode || e.which;
         if (code == 13) {
@@ -111,10 +115,10 @@ function initialize() {
     };
 
 
-
+    // go button press action listener
     $('.go_button').click(function() {
+
         var places = searchBox.getPlaces();
-        //console.log(" places "+JSON.stringify(places));
 
         if (places.length == 0) {
             return;
@@ -187,8 +191,6 @@ function initialize() {
         map.fitBounds(bounds);
 
     });
-    //processYelp(); // processing yelp
-    //yelpBusinessSearch();
 
 }
 
@@ -204,8 +206,6 @@ function callback(results, status) {
 }
 function createMarker() {  //place
 
-
-
     // iterating each and every element of list
     for(var i=0; i<searchedItem().length;i++) {
         var items = searchedItem()[i];
@@ -213,11 +213,7 @@ function createMarker() {  //place
             map: map,
             position: items.locations
         });
-
         markersOuter.push(marker);
-
-        //addMarkerSearch(items.name,marker,items.imgUrl, items.info);
-
     }
 
     // applying custom layout to the info window
@@ -227,6 +223,7 @@ function createMarker() {  //place
 
         var iwBackground = iwOuter.prev();
 
+
         // Removes background shadow DIV
         iwBackground.children(':nth-child(2)').css({'display' : 'none'});
 
@@ -234,30 +231,30 @@ function createMarker() {  //place
         iwBackground.children(':nth-child(4)').css({'display' : 'none'});
 
         // Moves the infowindow 115px to the right.
-        iwOuter.parent().parent().css({left: '115px'});
+        //iwOuter.parent().parent().css({left: '115px'});
 
         // Moves the shadow of the arrow 76px to the left margin.
-        iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
+        //iwBackground.children(':nth-child(1)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
 
         // Moves the arrow 76px to the left margin.
-        iwBackground.children(':nth-child(3)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
+        //iwBackground.children(':nth-child(3)').attr('style', function(i,s){ return s + 'left: 76px !important;'});
 
         // Changes the desired tail shadow color.
-        iwBackground.children(':nth-child(3)').find('div').children().css({'box-shadow': 'rgba(72, 181, 233, 0.6) 0px 1px 6px', 'z-index' : '1'});
+        //iwBackground.children(':nth-child(3)').find('div').children().css({'box-shadow': 'rgba(72, 181, 233, 0.6) 0px 1px 6px', 'z-index' : '1'});
 
         // Reference to the div that groups the close button elements.
         var iwCloseBtn = iwOuter.next();
 
         // Apply the desired effect to the close button
-        iwCloseBtn.css({opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
+        //iwCloseBtn.css({opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
 
         //if($('.info_content').height() < 140){
         //    $('.iw-bottom-gradient').css({display: 'none'});
         //}
 
-        iwCloseBtn.mouseout(function(){
-            $(this).css({opacity: '1'});
-        });
+        //iwCloseBtn.mouseout(function(){
+        //    $(this).css({opacity: '1'});
+        //});
 
 
     });
@@ -292,7 +289,10 @@ function processSearchEntry(searchValue) {
         var item = new MapItem(tempItem.name, new google.maps.LatLng(tempItem.geometry.location.lat(),
                 tempItem.geometry.location.lng()),
                 tempItem.types[0], "kk", "default" );
-        searchedItem.push(item) ;
+        // setting rating value
+        item.setRating(tempItem.rating);
+        // inserting searhes item to list
+        searchedItem.push(item);
         searchFlickr(searchedItem()[i]);
         yelpBusinessSearch(searchedItem()[i]);
         searchWikipedia(searchedItem()[i])
@@ -349,11 +349,10 @@ function searchOnMap(searchText) {
  * @param marker marker object of location
  */
 
-function addMarkerSearch(name, marker, imgurl, info) {
+function addMarkerSearch(name, marker, imgurl, info, item) {
 
     google.maps.event.addListener(marker, 'click', function() {
-        infoWindow.setContent(setInfoWindowContent(name, imgurl, info));
-        //searchWikipedia(name);
+        infoWindow.setContent(setInfoWindowContent(name, imgurl, info, item));
         infoWindow.open(map, marker);
     });
 
@@ -389,51 +388,36 @@ function clearMarkers() {
 function deleteMarkers() {
     clearMarkers();
 }
-// display helper for the map infowindow
-
-var infoWindowContent = '<div class="info_content">' +
-
-        '<h3> content </h3>' +
-        '<p>Info goes here </p>'+
-        '</div>';
 
 // initialize the infowindow
 
 var infoWindow = new google.maps.infoWindow({
     content: infoWindowContent,
-    maxWidth: 350
+    maxWidth: 300
 });
 
-function setInfoWindowContent(name, imgurl, info) {
-   // var tt= searchFlickr(name);
+function setInfoWindowContent(name, imgurl, info, item) {
+    var link;
+    // creating review link
+    if(item.review !== "#"){
+        link = '<a href= '+item.review+' target="_blank">'+'Review</a>';
+    }else {
+        link = "#";
+    }
 
     var content = '<div id="info_container">' +
-        '<div class="content_title"> '+name+'</div>'+
-        '<div class="info_content>" '+
-        '<img src='+imgurl+'/>'+
-        //'<p>'+info+'</p>'+
+        '<div class="content_title">' +name+ '</div>'+
+        '<div class="info_content"> '+
+        '<div id="p_content">' +
+        'Type  : '+ item.type+ '<br>'+
+         'Review : '+link +'<br>'+
+         'Rating : '+item.rating+
+        '</div>' +
+        '<div id="image_content">' + '<img src='+imgurl+'/>'+ '</div>'+
         '</div>'+
         '</div>';
-
-
-    //var content = '<div id="iw-container">' +
-    //    '<div class="iw-title">Porcelain Factory of Vista Alegre</div>' +
-    //    '<div class="iw-content">' +
-    //    '<div class="iw-subTitle">History</div>' +
-    //    '<img src="http://maps.marnoto.com/en/5wayscustomizeinfowindow/images/vistalegre.jpg" alt="Porcelain Factory of Vista Alegre" height="115" width="83">' +
-    //    '<p>Founded in 1824, the Porcelain Factory of Vista Alegre was the first industrial unit dedicated to porcelain production in Portugal. For the foundation and success of this risky industrial development was crucial the spirit of persistence of its founder, José Ferreira Pinto Basto. Leading figure in Portuguese society of the nineteenth century farm owner, daring dealer, wisely incorporated the liberal ideas of the century, having become "the first example of free enterprise" in Portugal.</p>' +
-    //    '<div class="iw-subTitle">Contacts</div>' +
-    //    '<p>VISTA ALEGRE ATLANTIS, SA<br>3830-292 Ílhavo - Portugal<br>'+
-    //    '<br>Phone. +351 234 320 600<br>e-mail: geral@vaa.pt<br>www: www.myvistaalegre.com</p>'+
-    //    '</div>' +
-    //    '<div class="iw-bottom-gradient"></div>' +
-    //    '</div>';
-
     return content;
 }
-// ajax loading of info to the info window on marker
-
-
 
 // testing with wikipedia
 function searchWikipedia(placeName) {
@@ -454,10 +438,7 @@ function searchWikipedia(placeName) {
             var articleList = data[0];
             var url = 'http://en.wikipedia.org/wiki/'+articleList;
             placeName.info = url;
-            //console.log(("wiki url "+url));
             counterMarker('wikipedia');
-                //$wikiElem.append('<li><a href="'+url+'" >' +
-                //articleStr + '</a></li>');
             clearTimeout(wikiRequestTimeout);
         }
     });
@@ -619,6 +600,10 @@ function processYelp() {
 
 }
 
+/**
+ * Function for inserting searched item image and review
+ * @param calledFunction is a string associates with searched type
+ */
 
 function counterMarker(calledFunction) {
 
@@ -637,7 +622,7 @@ function counterMarker(calledFunction) {
 
         for(var i=0; i<searchedItem().length;i++) {
             var items = searchedItem()[i];
-            addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info);
+            addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info, items);
         }
         counterFlickr = 0;
         counterWiki = 0;
@@ -688,8 +673,7 @@ function yelpBusinessSearch(bussiness) {
         },
         success: function(results) {
             // Do stuff with results
-            //console.log("success "+ JSON.stringify(results));
-            //console.log(" --- - "+results.mobile_url);
+            bussiness.setReview(results.mobile_url);
             counterMarker('yelp');
         },
 
@@ -703,10 +687,10 @@ function yelpBusinessSearch(bussiness) {
 
 
     try {
-        // Send AJAX query via jQuery library.
+        // if fail call the counter
         $.ajax(settings).fail( function(jqXHR, textStatus, errorThrown) {
-            //console.log("error");
             counterMarker('yelp');
+            bussiness.setReview("#");
         });
 
     } catch(err) {
