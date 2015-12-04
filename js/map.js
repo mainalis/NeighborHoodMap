@@ -120,6 +120,8 @@ function initialize() {
 
         var places = searchBox.getPlaces();
 
+        console.log("Searched item "+ JSON.stringify(places));
+
         if (places.length == 0) {
             return;
         }
@@ -167,16 +169,8 @@ function initialize() {
             });
             // create marker for each place
 
-
-
             // binding the action listener to the markers
             bindMarkerListener(place,map,tempMarker);
-
-            //google.maps.event.addListener(tempMarker, 'click', function(){
-            //    infoWindow.setContent(place.name)
-            //    infoWindow.open(map, tempMarker);
-            //
-            //});
 
             if (place.geometry.viewport) {
                 // only geocodes have view port
@@ -206,14 +200,27 @@ function callback(results, status) {
 }
 function createMarker() {  //place
 
+
     // iterating each and every element of list
     for(var i=0; i<searchedItem().length;i++) {
+
         var items = searchedItem()[i];
-        var marker = new google.maps.Marker({
+
+        markersOuter.push( new google.maps.Marker({
             map: map,
-            position: items.locations
-        });
-        markersOuter.push(marker);
+            position: items.locations,
+            animation: google.maps.Animation.DROP
+        }) );
+    }
+
+    for(var i=0; i< markersOuter.length;i++) {
+
+        console.log(markersOuter.length);
+
+        //google.maps.event.addListener(markersOuter[i],'click', function() {
+        //    toggleBounce(markersOuter[i]);
+        //
+        //});
     }
 
     // applying custom layout to the info window
@@ -259,7 +266,18 @@ function createMarker() {  //place
 
     });
 
+
+
 }
+//
+//function toggleBounce() {
+//    if (marker.getAnimation() !== null) {
+//        marker.setAnimation(null);
+//    } else {
+//        marker.setAnimation(google.maps.Animation.BOUNCE);
+//    }
+//}
+
 /**
  * Function for binding the marker and its info window
  */
@@ -289,8 +307,10 @@ function processSearchEntry(searchValue) {
         var item = new MapItem(tempItem.name, new google.maps.LatLng(tempItem.geometry.location.lat(),
                 tempItem.geometry.location.lng()),
                 tempItem.types[0], "kk", "default" );
+
         // setting rating value
         item.setRating(tempItem.rating);
+
         // inserting searhes item to list
         searchedItem.push(item);
         searchFlickr(searchedItem()[i]);
@@ -351,9 +371,13 @@ function searchOnMap(searchText) {
 
 function addMarkerSearch(name, marker, imgurl, info, item) {
 
-    google.maps.event.addListener(marker, 'click', function() {
+    google.maps.event.addListener(marker, 'click',function(){
+
+        toggleBounce(marker);
         infoWindow.setContent(setInfoWindowContent(name, imgurl, info, item));
         infoWindow.open(map, marker);
+        setTimeout(toggleBounce, 1500, marker);
+
     });
 
 }
@@ -515,17 +539,27 @@ function handleListClicked(clickedItem, position) {
         pos = 0;
     }
 
-    //console.log("pos "+JSON.parse(markersOuter[pos]));
+    //console.log("pos "+pos);
+    // ,toggleBounce(markersOuter[pos])
 
     google.maps.event.trigger(markersOuter[pos],'click');
 
+}
+
+function toggleBounce(mMarker) {
+
+    if (mMarker.getAnimation() !== null) {
+        mMarker.setAnimation(null);
+    } else {
+        mMarker.setAnimation(google.maps.Animation.BOUNCE);
+    }
 }
 
 
 function addListListener() {
 
     $("#marker_list li").click(function() {
-        //console.log("clicked on list");
+
         handleListClicked($(this).text(), $(this).index());
     });
 }
@@ -550,55 +584,6 @@ function nonce_generate() {
     return (Math.floor(Math.random() * 1e12).toString());
 }
 
-// yelp access with oauth
-
-function processYelp() {
-
-    // need a way to hiding consumer key and token
-
-    var consumer_key = "n7Xp4IsnMZLAVuuyVjz-hA";
-    var consumer_secret = "KUbgJZlaNi69BKOVII5iI-QC-aI";
-    var token = "RB_d80kXSa3sHeiEW7_tBBH2-DAfp572";
-    var token_secret = "60tGsaUF8Sn4jDy4vI4ySYxn5yU";
-    var YELP_BASE_URL = 'https://api.yelp.com/v2/search'; // search /?location=
-    var src = 'San Francisco';
-
-    var yelp_url = YELP_BASE_URL;//+ self.selected_place().Yelp.business_id;
-
-    var parameters = {
-        oauth_consumer_key: consumer_key,
-        oauth_token: token,
-        oauth_nonce: nonce_generate(),
-        oauth_timestamp: Math.floor(Date.now()/1000),
-        oauth_signature_method: 'HMAC-SHA1',
-        oauth_version : '1.0',
-        callback: 'cb',              // This is crucial to include for jsonp implementation in AJAX or else the oauth-signature will be wrong.
-        location: 'coventry',
-        term: 'cafe'
-
-    };
-
-    var encodedSignature = oauthSignature.generate('GET',yelp_url, parameters, consumer_secret,token_secret);
-    parameters.oauth_signature = encodedSignature;
-
-    var settings = {
-        url: yelp_url,
-        data: parameters,
-        cache: true,                // This is crucial to include as well to prevent jQuery from adding on a cache-buster parameter "_=23489489749837", invalidating our oauth-signature
-        dataType: 'jsonp',
-        success: function(results) {
-            // Do stuff with results
-            //console.log("success "+ JSON.stringify(results));
-        },
-        error: function() {
-            // Do stuff on fail
-        }
-    };
-
-    // Send AJAX query via jQuery library.
-    $.ajax(settings);
-
-}
 
 /**
  * Function for inserting searched item image and review
@@ -622,6 +607,9 @@ function counterMarker(calledFunction) {
 
         for(var i=0; i<searchedItem().length;i++) {
             var items = searchedItem()[i];
+            // adding bouncing
+
+            // adding info content
             addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info, items);
         }
         counterFlickr = 0;
@@ -629,6 +617,7 @@ function counterMarker(calledFunction) {
         counterYelp = 0;
     }
 }
+
 
 
 
@@ -642,7 +631,7 @@ function yelpBusinessSearch(bussiness) {
     var token = "RB_d80kXSa3sHeiEW7_tBBH2-DAfp572";
     var token_secret = "60tGsaUF8Sn4jDy4vI4ySYxn5yU";
     var YELP_BASE_URL ='https://api.yelp.com/v2/business/'; // search /?location=
-    var src = bussiness.name+'-london';//'city-arms-coventry';//
+    var src = bussiness.name.replace(/ /g, "-")+'-london';//'city-arms-coventry';//
 
     var yelp_url = YELP_BASE_URL+src;//+ self.selected_place().Yelp.business_id;
 

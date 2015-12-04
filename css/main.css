@@ -80,12 +80,9 @@ html,body {
 }
 
 #map-canvas {
-
     height: inherit;
-    margin: 5px;
+    margin: 20px;
     padding: 5px;
-
-
 }
 
 .fullscreen {
@@ -93,11 +90,20 @@ html,body {
 }
 
 
+#knockout {
+    margin-top: 40px;
+    margin-left: 10px;
+}
+
+.box {
+    height: 25px;
+    margin: 5px 0 0 10px;
+}
 
 ul {
     list-style-type: none;
-    margin: 0;
-    padding: 0;
+    border-style: solid;
+    padding: 0 5px 0 10px;
     cursor: default;
 }
 
@@ -137,8 +143,6 @@ li a:hover {
 
 .button-top {
     position:relative;
-    /*padding:6px 15px;
-    left:-64px; */
     border:1px solid #207cca;
     background-color:#207cca;
     padding: 0 0 0 0;
@@ -152,7 +156,6 @@ li a:hover {
 
 .c-icon {
     position:relative;
-    /*left:-160px;*/
 }
 
 form {
