@@ -102,7 +102,6 @@ function initialize() {
     $('#pac-input').on('keypress keyup', function(e) {
         var code = e.keyCode || e.which;
         if (code == 13) {
-            console.log(" enter pressed");
             e.preventDefault();
             return false;
         }else {
@@ -120,57 +119,52 @@ function initialize() {
 
         var places = searchBox.getPlaces();
 
-        console.log("Searched item "+ JSON.stringify(places));
-
         if (places.length == 0) {
             return;
         }
+
         if(places.length == 1) {
 
             latLng = new google.maps.LatLng(places[0].geometry.location.G, places[0].geometry.location.K);
-            var mrequest = {
-                location: latLng,
-                radius: '1000',
-                types: ["restaurant", "store", "museum", "pub"] // restaurant
-            };
-            service.nearbySearch(mrequest, callback);
+            //service.nearbySearch(mrequest, callback);
         }
+
+
+        markersOuter = [];
+
+        // clear all old markers
+        //markersOuter.forEach(function(marker) {
+        //    marker.setMap(null);
+        //});
 
         // function calling for displaying searched item to the list
         processSearchEntry(places);
 
-        // clear out the old markers
-        markersOuter.forEach(function(marker) {
-            marker.setMap(null);
-        });
-
-        markersOuter = [];
-
         var bounds = new google.maps.LatLngBounds();
-        var tempMarker;
-        var temInfoWin = new google.maps.InfoWindow();
 
         places.forEach(function(place) {
 
             var icon = {
                 url: place.icon,
-                size: new google.maps.Size(71,71),
+                size: new google.maps.Size(35,35),
                 origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(17, 34),
-                scaledSize: new google.maps.Size(25,25)
+                anchor: new google.maps.Point(8, 17),
+                scaledSize: new google.maps.Size(15,15)
             };
 
-            tempMarker = new google.maps.Marker({
+
+            markersOuter.push(new google.maps.Marker({
                 map: map,
-                icon: icon,
+                //icon: icon,
                 title: place.name,
                 position: place.geometry.location,
+                animation: google.maps.Animation.DROP,
                 myIndex: markersOuter.length
-            });
+            }) );
             // create marker for each place
 
             // binding the action listener to the markers
-            bindMarkerListener(place,map,tempMarker);
+            //bindMarkerListener(place,map,tempMarker);
 
             if (place.geometry.viewport) {
                 // only geocodes have view port
@@ -179,7 +173,7 @@ function initialize() {
                 bounds.extend(place.geometry.location);
             }
 
-            markersOuter.push(tempMarker);
+
         });
 
         map.fitBounds(bounds);
@@ -213,16 +207,6 @@ function createMarker() {  //place
         }) );
     }
 
-    for(var i=0; i< markersOuter.length;i++) {
-
-        console.log(markersOuter.length);
-
-        //google.maps.event.addListener(markersOuter[i],'click', function() {
-        //    toggleBounce(markersOuter[i]);
-        //
-        //});
-    }
-
     // applying custom layout to the info window
     google.maps.event.addListener(infoWindow, 'domready', function(){
 
@@ -253,15 +237,15 @@ function createMarker() {  //place
         var iwCloseBtn = iwOuter.next();
 
         // Apply the desired effect to the close button
-        //iwCloseBtn.css({opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
+        iwCloseBtn.css({opacity: '1', right: '38px', top: '3px', border: '7px solid #48b5e9', 'border-radius': '13px', 'box-shadow': '0 0 5px #3990B9'});
 
         //if($('.info_content').height() < 140){
         //    $('.iw-bottom-gradient').css({display: 'none'});
         //}
 
-        //iwCloseBtn.mouseout(function(){
-        //    $(this).css({opacity: '1'});
-        //});
+        iwCloseBtn.mouseout(function(){
+            $(this).css({opacity: '0.5'});
+        });
 
 
     });
@@ -269,14 +253,7 @@ function createMarker() {  //place
 
 
 }
-//
-//function toggleBounce() {
-//    if (marker.getAnimation() !== null) {
-//        marker.setAnimation(null);
-//    } else {
-//        marker.setAnimation(google.maps.Animation.BOUNCE);
-//    }
-//}
+
 
 /**
  * Function for binding the marker and its info window
@@ -313,7 +290,12 @@ function processSearchEntry(searchValue) {
 
         // inserting searhes item to list
         searchedItem.push(item);
+
+        // searching content of info window asynchronously
+
+        // flicker search for image
         searchFlickr(searchedItem()[i]);
+        // yelp search for review
         yelpBusinessSearch(searchedItem()[i]);
         searchWikipedia(searchedItem()[i])
     }
@@ -357,7 +339,7 @@ function searchOnMap(searchText) {
     if(tempObs().length > 0) {
 
         searchedItem.removeAll();
-        searchedItem((tempObs().slice()));//= tempObs;
+        searchedItem((tempObs().slice()));
         addListListener();
     }
 
@@ -372,11 +354,15 @@ function searchOnMap(searchText) {
 function addMarkerSearch(name, marker, imgurl, info, item) {
 
     google.maps.event.addListener(marker, 'click',function(){
-
+        // adding bouncing animation to marker
         toggleBounce(marker);
+        console.log("Marker "+marker);
+        // adding info content to the marker
         infoWindow.setContent(setInfoWindowContent(name, imgurl, info, item));
         infoWindow.open(map, marker);
-        setTimeout(toggleBounce, 1500, marker);
+        // setting time out for marker
+        //setTimeout(toggleBounce, 1500, marker);
+        setTimeout(function(){ toggleBounce(marker);}, 1500);
 
     });
 
@@ -415,10 +401,10 @@ function deleteMarkers() {
 
 // initialize the infowindow
 
-var infoWindow = new google.maps.infoWindow({
-    content: infoWindowContent,
-    maxWidth: 300
-});
+//var infoWindow = new google.maps.infoWindow({
+//    content: infoWindowContent,
+//    maxWidth: 300
+//});
 
 function setInfoWindowContent(name, imgurl, info, item) {
     var link;
@@ -494,8 +480,6 @@ function searchFlickr(searchItem) {
 
                     result = 'https://farm'+data.photos.photo[0].farm+'.staticflickr.com/'+data.photos.photo[0].server+
                     '/'+data.photos.photo[0].id+'_'+data.photos.photo[0].secret+'_t.jpg';
-                    //console.log("flickr "+result);
-                     //searchItem.setImgUrl(result);
                      searchItem.imgUrl = result;
 
                 } else {
@@ -590,24 +574,24 @@ function nonce_generate() {
  * @param calledFunction is a string associates with searched type
  */
 
-function counterMarker(calledFunction) {
+function counterMarker(functionName) {
 
 
-    if(calledFunction === 'flickr') {
+    if(functionName === 'flickr') {
         counterFlickr++;
-    } else if(calledFunction === 'wikipedia') {
+    } else if(functionName === 'wikipedia') {
         counterWiki++;
-    } else if(calledFunction === 'yelp') {
+    } else if(functionName === 'yelp') {
         counterYelp++;
     }
+    //counterWiki == searchedItem().length &&
 
     if(counterFlickr == searchedItem().length &&
-        counterWiki == searchedItem().length &&
+
         counterYelp == searchedItem().length) {
 
         for(var i=0; i<searchedItem().length;i++) {
             var items = searchedItem()[i];
-            // adding bouncing
 
             // adding info content
             addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info, items);
