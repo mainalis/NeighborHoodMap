@@ -315,3 +315,9 @@ ul li:hover {
     width:75px;
     display:inline;
 }
+
+#check_box {
+
+    padding-left: 15px;
+    padding-top: 15px;
+}

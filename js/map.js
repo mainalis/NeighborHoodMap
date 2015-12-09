@@ -13,6 +13,8 @@ var markersOuter = [];
 var counterWiki = 0;
 var counterFlickr = 0;
 var counterYelp = 0;
+var listSearch;
+var googleSearch;
 
 var MapItem = function(name, locations, type, imageUrl, info) {
     this.name = name;
@@ -60,6 +62,9 @@ MapItem.prototype.updateImgUrl = function (imgUrl) {
 
 function initialize() {
 
+    listSearch = $("#list_search");
+    googleSearch = $("#google_search");
+
     latLng = new google.maps.LatLng(51.501049, -0.026093);
     infoWindow = new google.maps.InfoWindow();
 
@@ -104,8 +109,10 @@ function initialize() {
         if (code == 13) {
             e.preventDefault();
             return false;
-        }else {
-            searchOnMap(input.value);
+        }else{
+            if(listSearch.prop('checked')){
+                searchOnMap(input.value);
+            }
         }
     });
 
@@ -180,6 +187,24 @@ function initialize() {
 
     });
 
+
+
+
+    listSearch.change(function(){
+        if(this.checked) {
+            googleSearch.prop('checked',false);
+            //autocomplete.unbindAll();
+            google.maps.event.clearInstanceListeners(searchBox);
+        }
+    });
+
+    googleSearch.change(function(){
+        if(this.checked){
+            listSearch.prop('checked', false);
+            //google.maps.event.addListener(input);
+        }
+    });
+
 }
 
 function callback(results, status) {
@@ -249,6 +274,8 @@ function createMarker() {  //place
 
 
     });
+
+
 
 
 
