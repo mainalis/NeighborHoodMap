@@ -7,7 +7,7 @@ var map;
 var service;
 var infoWindow;
 var latLng ;
-var searchBox;
+var searchBox; // google automatic search
 var searchedItem = ko.observableArray();
 var markersOuter = [];
 var counterWiki = 0;
@@ -15,6 +15,7 @@ var counterFlickr = 0;
 var counterYelp = 0;
 var listSearch;
 var googleSearch;
+var input; // input box
 
 var MapItem = function(name, locations, type, imageUrl, info) {
     this.name = name;
@@ -79,7 +80,7 @@ function initialize() {
     };
 
     // searchBox adding
-    var input = document.getElementById("pac-input");
+    input = document.getElementById("pac-input");
 
     // serch box object
     searchBox = new google.maps.places.SearchBox(input);
@@ -194,7 +195,7 @@ function initialize() {
         if(this.checked) {
             googleSearch.prop('checked',false);
             //autocomplete.unbindAll();
-            google.maps.event.clearInstanceListeners(searchBox);
+            disableGoogleAutoComplete();
         }
     });
 
@@ -202,8 +203,24 @@ function initialize() {
         if(this.checked){
             listSearch.prop('checked', false);
             //google.maps.event.addListener(input);
+            enableGoogleAutoComplete();
+        } else {
+            disableGoogleAutoComplete();
         }
     });
+
+}
+
+
+
+function disableGoogleAutoComplete() {
+    google.maps.event.clearInstanceListeners(input);
+    console.log(' Disbaling auto complete to Google');
+}
+
+function enableGoogleAutoComplete() {
+    searchBox = new google.maps.places.SearchBox(input);
+    console.log("AutoComplete is set ");
 
 }
 
@@ -280,6 +297,7 @@ function createMarker() {  //place
 
 
 }
+
 
 
 /**
