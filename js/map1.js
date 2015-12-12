@@ -2,87 +2,20 @@
  * Created by sushilmainali on 31/08/15.
  */
 
-/**
- * google map refernce variable
- */
+
 var map;
-
 var service;
-/**
- * Reference of infowindow of google map
- */
 var infoWindow;
-/**
- * Google longitude and latitude object of google
- */
 var latLng ;
-/**
- * Google search place variable referende
- */
-var searchBox;
-
-/**
- * Instance of serached item list
- * knockout observable array
- */
+var searchBox; // google automatic search
 var searchedItem = ko.observableArray();
-
-/**
- * Array storing marker of the map
- * @type {Array}
- */
 var markersOuter = [];
-
-/**
- * Variable to store counter for number of
- *
- * @type {number}
- */
 var counterWiki = 0;
-
-/**
- * Variable to store the counter reference of
- * marker associated with flicker
- * @type {number}
- */
 var counterFlickr = 0;
-
-/**
- * Variable to store the counter reference of
- * marker associated with yelp
- * @type {number}
- */
 var counterYelp = 0;
-
-/**
- * checkbox reference for local search
- */
 var listSearch;
-
-/**
- * google search checkbox reference
- */
 var googleSearch;
-
-/**
-* Input box reference
-*/
-var input; 
-
-/**
-* reference variable to google geocoder object
-*/
-var geocoder;
-
-/**
- * Class for storing marker's information avaliable on map
- * @param name reference to name of the searched item
- * @param locations reference to longitude and latitude of marker position
- * @param type reference to the type of point of interest i.e. pu
- * @param imageUrl reference to the flickr searched image url reference
- * @param info
- * @constructor
- */
+var input; // input box
 
 var MapItem = function(name, locations, type, imageUrl, info) {
     this.name = name;
@@ -93,35 +26,20 @@ var MapItem = function(name, locations, type, imageUrl, info) {
     this.review = "notFound";
     this.rating = "00:00:00";
 
-    /**
-     * Setter function for new url reference
-      * @param newUrl  new flickr url
-     */
+    // setter for the MpItem attributes
+
     this.setImgUrl = function(newUrl) {
         this.imgUrl = newUrl;
     };
 
-    /**
-     * setter function to update info field of MapItem
-     * @param newInfo new info string
-     */
     this.setInfo = function(newInfo) {
-        this.info = newInfo;
+        this.info = info;
     };
 
-    /**
-     * Setter function for storing yelp review of business
-     * @param newReview review url string
-     */
     this.setReview = function(newReview) {
         this.review = newReview;
     };
 
-    /**
-     * Setter function for selected marker
-     * @param newRating  string to display current
-     * rating of marker place
-     */
     this.setRating = function(newRating) {
         this.rating = newRating;
     }
@@ -142,95 +60,43 @@ MapItem.prototype.updateImgUrl = function (imgUrl) {
     this.imgUrl = imgUrl;
 };
 
-/**
- * Function used by google map to initialize map and markers
- */
+
 function initialize() {
 
-    /**
-     * local search reference initialize
-     * @type {*|jQuery|HTMLElement}
-     */
     listSearch = $("#list_search");
-
-    /**
-     * google search reference initialize
-     * @type {*|jQuery|HTMLElement}
-     */
     googleSearch = $("#google_search");
 
-    /**
-     * gecoding reference initalization
-     * @type {google.maps.Geocoder}
-     */
-	geocoder = new google.maps.Geocoder;
-
-    /**
-     * google longitude and latitude object reference
-     * @type {google.maps.LatLng}
-     */
     latLng = new google.maps.LatLng(51.501049, -0.026093);
-
-    /**
-     * google map marker infowindo reference
-     * @type {google.maps.InfoWindow}
-     */
     infoWindow = new google.maps.InfoWindow();
 
-    /**
-     * Map's extra settings for centering the map
-     * zooming and background color of the map
-     * @type {{center: google.maps.LatLng, zoom: number, backgroundColor: string}}
-     */
     var mapOptions = {
         center: latLng,
         zoom: 16,
         backgroundColor: "#ff0000"
     };
 
-    /**
-     * getting reference of input search fron html
-     * @type {HTMLElement}
-     */
+    var drag = function() {
+        console.log(" Drag is detected");
+    };
+
+    // searchBox adding
     input = document.getElementById("pac-input");
 
-    /**
-     * Google map places searchbox object reference
-     * @type {google.maps.places.SearchBox}
-     */
+    // serch box object
     searchBox = new google.maps.places.SearchBox(input);
 
-    /**
-     * Google map's  map object reference
-     * @type {google.maps.Map}
-     */
     map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
-    /**
-     * Extra search  options for google place search
-     * @type {{location: google.maps.LatLng, radius: string, types: string[]}}
-     */
+
     var request = {
         location: latLng,
         radius: '500',
-        types: ["restaurant","store","museum","pub"]
+        types: ["restaurant","store","museum","pub"] // restaurant
     };
 
-    /**
-     * Google place service reference
-     * @type {google.maps.places.PlacesService}
-     */
     service = new google.maps.places.PlacesService(map);
-
-    /**
-     * Google nearby search function
-     */
     service.nearbySearch(request, callback);
 
-    /**
-     * adding action listener for map bounds
-     * and attached it to search box
-     */
     map.addListener('bounds_changed', function() {
         searchBox.setBounds(map.getBounds());
     });
@@ -239,9 +105,6 @@ function initialize() {
 
 
     //keyup action listener
-    /**
-     * Input box action listener
-     */
     $('#pac-input').on('keypress keyup', function(e) {
         var code = e.keyCode || e.which;
         if (code == 13) {
@@ -249,55 +112,32 @@ function initialize() {
             return false;
         }else{
             if(listSearch.prop('checked')){
-
-				if(input.value.length > 0) {
-					 searchOnMap(input.value);
-				} else {
-						
-				}				
+                searchOnMap(input.value);
             }
         }
     });
 
-    /**
-     * Input on focus action listener
-     */
     input.onfocus = function() {
       console.log("Getting search box onfocous "+ input.value);
     };
 
 
-    /**
-     *  go button press action listener
-     */
+    // go button press action listener
     $('.go_button').click(function() {
 
-        /**
-         * getting place from entered text
-         * using google map place search api
-         */
         var places = searchBox.getPlaces();
 
-        /**
-         * if searched result is zero
-         */
         if (places.length == 0) {
             return;
         }
 
-        /**
-         * if searched place length is 1
-         */
         if(places.length == 1) {
 
             latLng = new google.maps.LatLng(places[0].geometry.location.G, places[0].geometry.location.K);
             //service.nearbySearch(mrequest, callback);
         }
 
-        /**
-         * clearing array holding markers
-         * @type {Array}
-         */
+
         markersOuter = [];
 
         // clear all old markers
@@ -305,29 +145,11 @@ function initialize() {
         //    marker.setMap(null);
         //});
 
-        /**
-         * calling reversGecoding to get the name of city
-         * which is use in yelp  business search call
-         */
-		reverseGeocoding( new google.maps.LatLng(places[0].geometry.location.lat(),
-                places[0].geometry.location.lng()) );
-
-        /**
-         * calling processSearchEntry to adding
-         * searched item to the list
-         */
+        // function calling for displaying searched item to the list
         processSearchEntry(places);
 
-        /**
-         * Getting bounds to the map
-         * @type {google.maps.LatLngBounds}
-         */
         var bounds = new google.maps.LatLngBounds();
 
-        /**
-         * Iterating through avaliable searched item
-         * and adding it to the markersOuter array
-         */
         places.forEach(function(place) {
 
             var icon = {
@@ -338,6 +160,7 @@ function initialize() {
                 scaledSize: new google.maps.Size(15,15)
             };
 
+
             markersOuter.push(new google.maps.Marker({
                 map: map,
                 //icon: icon,
@@ -346,6 +169,7 @@ function initialize() {
                 animation: google.maps.Animation.DROP,
                 myIndex: markersOuter.length
             }) );
+            // create marker for each place
 
             // binding the action listener to the markers
             //bindMarkerListener(place,map,tempMarker);
@@ -357,30 +181,28 @@ function initialize() {
                 bounds.extend(place.geometry.location);
             }
 
+
         });
 
         map.fitBounds(bounds);
 
     });
 
-    /**
-     * listsearch change action listener
-     * of local search check box
-     */
+
+
+
     listSearch.change(function(){
         if(this.checked) {
             googleSearch.prop('checked',false);
+            //autocomplete.unbindAll();
             disableGoogleAutoComplete();
         }
     });
 
-    /**
-     * google search action listener
-     * of google search check box
-     */
     googleSearch.change(function(){
         if(this.checked){
             listSearch.prop('checked', false);
+            //google.maps.event.addListener(input);
             enableGoogleAutoComplete();
         } else {
             disableGoogleAutoComplete();
@@ -389,52 +211,37 @@ function initialize() {
 
 }
 
-/**
- * Function for disabling autocomplete of input box
- */
+
+
 function disableGoogleAutoComplete() {
     google.maps.event.clearInstanceListeners(input);
+    console.log(' Disbaling auto complete to Google');
 }
 
-/**
- * Function adding autocomplete  listener to input
- */
 function enableGoogleAutoComplete() {
     searchBox = new google.maps.places.SearchBox(input);
+    console.log("AutoComplete is set ");
+
 }
 
-/**
- * callback function of place services
- * @param results the available search places
- * @param status gives info about wheteher search is successfull or not
- */
 function callback(results, status) {
 
     if(status === google.maps.places.PlacesServiceStatus.OK) {
 
-        /**
-         * Adding available result to knockout observable array
-         */
+        // storing on observable array
         processSearchEntry(results);
-
-        /**
-         * Creating markers fron available result
-         */
+        // creating marker and storing to the arrary
         createMarker();
     }
 }
+function createMarker() {  //place
 
-/**
- * Helper function of callback
- * this function creates a marker and store to
- * the array
- */
-function createMarker() {
-    /**
-     * Iterating through the list of places
-     */
+
+    // iterating each and every element of list
     for(var i=0; i<searchedItem().length;i++) {
+
         var items = searchedItem()[i];
+
         markersOuter.push( new google.maps.Marker({
             map: map,
             position: items.locations,
@@ -443,9 +250,6 @@ function createMarker() {
     }
 
     // applying custom layout to the info window
-    /**
-     * Changing apperarance of infowindow
-     */
     google.maps.event.addListener(infoWindow, 'domready', function(){
 
         var iwOuter = $('.gm-style-iw');
@@ -488,6 +292,10 @@ function createMarker() {
 
     });
 
+
+
+
+
 }
 
 
@@ -503,23 +311,18 @@ function bindMarkerListener(place, map, marker) {
 
     });
 }
-
-
+//google.maps.event.addDomListener(window, 'load', initialize);
 /**
  * Function for processing the search content of the map
  * @param searchValue
  */
 function processSearchEntry(searchValue) {
+    // removing item from the observable list
+    // clearing knocokout observable list
 
-    /**
-     * removing content of searchedItem
-     * if there exists any
-     */
     searchedItem.removeAll();
 
-    /**
-     * Iterating through the content of observable list
-     */
+    // iterating through the avaliable places
     for(var i=0; i<searchValue.length;i++) {
 
         var tempItem = searchValue[i];
@@ -527,189 +330,83 @@ function processSearchEntry(searchValue) {
                 tempItem.geometry.location.lng()),
                 tempItem.types[0], "kk", "default" );
 
-        /**
-         * setting rating to the MapItem object
-         */
+        // setting rating value
         item.setRating(tempItem.rating);
 
-        /**
-         * Adding MapItem object to the observable list
-         */
+        // inserting searhes item to list
         searchedItem.push(item);
 
-        /**
-         * searching contents of info window
-         * asynchronously
-         */
+        // searching content of info window asynchronously
 
         // flicker search for image
-        /**
-         * Searching image from flickr
-         */
         searchFlickr(searchedItem()[i]);
-
-        /**
-         * Searching business review from yelp
-         */
+        // yelp search for review
         yelpBusinessSearch(searchedItem()[i]);
-
-        /**
-         * Wikipedia search , this search is
-         * not used in this application
-         */
         searchWikipedia(searchedItem()[i])
     }
 
-    /**
-     * adding listener to the observable list
-     */
     addListListener();
 
 }
-
-/**
- * Function implementing functionality of local search
- * this function will search markers available on map
- * @param searchText
- */
 function searchOnMap(searchText) {
-    /**
-     * delete the marker that currently
-     * present on map
-     */
-   
-
-    /**
-     * Name of the marker
-     */
+    deleteMarkers();
     var mName;
-
-    /**
-     * Marker object reference
-     */
     var marker;
-
-    /**
-     * Image url reference
-     */
     var imUrl;
-
-    /**
-     * observable array reference
-     */
     var tempObs = ko.observableArray();
-
-    /**
-     * information of marker reference
-     */
     var info;
-	var indicies = [];
 
-    /**
-     * Iterating through the available
-     * list of places
-     */
+    //console.log("searchedItem() "+ searchedItem()[0].toString());
     for(var i=0; i<searchedItem().length;i++) {
-        /**
-         * checking whether searched text matched
-         * the name of the available places.
-         * if it match the criteria then add
-         * it to the observable list
-         */
+
         if( searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())) {
 
-        /*   var items = searchedItem()[i].locations;
-           mName = searchedItem()[i].name;
-           imUrl = searchedItem()[i].imgUrl;
-           info = searchedItem()[i].info;
-           map.setCenter(searchedItem()[i].locations);
-		   
-           marker = new google.maps.Marker({
+           var items = searchedItem()[i].locations;
+            //check location things
+            mName = searchedItem()[i].name;
+            imUrl = searchedItem()[i].imgUrl;
+            info = searchedItem()[i].info;
+            map.setCenter(searchedItem()[i].locations);
+            marker = new google.maps.Marker({
                 map: map,
-                position: searchedItem()[i].locations,
-				animation: google.maps.Animation.DROP
+                position: searchedItem()[i].locations
             });
 
-            /**
-             * adding marker to the marker's array list
-             */
-        //    markersOuter.push(marker);
-
-            /**
-             * adding content to the searched marker
-             * info content
-             */
-       //     addMarkerSearch(mName,marker,imUrl, info, searchedItem()[i]);
+            markersOuter.push(marker);
+            addMarkerSearch(mName,marker,imUrl, info);
             //deleteMarkers();
-
-            /**
-             * Adding MapItem to the observable array
-             */
             tempObs.push(searchedItem()[i]);
-			indicies.push(i);
-			
+
         }
 
     }
-	
-	
 
-    /**
-     * checking the size of searched item
-     * observable array list and if it's length is
-     * greater than 0 do the further processing
-     */
     if(tempObs().length > 0) {
-		deleteMarkers();
+
         searchedItem.removeAll();
         searchedItem((tempObs().slice()));
-        /**
-         * adding listener to the new observable list
-         */
         addListListener();
     }
 
-	for(var i=0; i<tempObs().length; i++) {
-		var mapItem = tempObs()[i];
-		console.log("inside search");
-		 marker = new google.maps.Marker({
-				map: map,
-                position: mapItem.locations,
-				animation: google.maps.Animation.DROP
-            });
-		map.setCenter(mapItem.locations);
-		markersOuter.push(marker);
-		//marker.setMap(map);
-		addMarkerSearch(mapItem.name, marker ,mapItem.imgUrl, "", mapItem);
-	}
-	
-	
 
 }
 /**
  * Function for adding action listener on each marker
- * @param name name to display on info window
+ * @param name name to display on infowindow
  * @param marker marker object of location
  */
 
 function addMarkerSearch(name, marker, imgurl, info, item) {
 
     google.maps.event.addListener(marker, 'click',function(){
-
-        /**
-         * Adding bouncing animation to marker
-         */
+        // adding bouncing animation to marker
         toggleBounce(marker);
-
-        /**
-         * Adding info to the marker
-         */
+        console.log("Marker "+marker);
+        // adding info content to the marker
         infoWindow.setContent(setInfoWindowContent(name, imgurl, info, item));
         infoWindow.open(map, marker);
-
-        /**
-         * Setting time out to the toogle bounce
-         */
+        // setting time out for marker
+        //setTimeout(toggleBounce, 1500, marker);
         setTimeout(function(){ toggleBounce(marker);}, 1500);
 
     });
@@ -722,18 +419,14 @@ function addMarkerSearch(name, marker, imgurl, info, item) {
 function ViewModel() {
     var self = this;
     self.name = "Searched Location";
+    self.getName = function(){
+        return "Current <em> "+ self.name +"</em>!";
+    };
     self.sItem = searchedItem;
+    //disableOnEnterPress();
+
 }
-
-/**
- * Creating knockoout viewmodel object
- * @type {ViewModel}
- */
 var viewModel = new ViewModel();
-
-/**
- * Binding view mode to the DOM
- */
 ko.applyBindings(viewModel,  document.getElementById('marker_list'));
 
 // Sets the map on all markers in the array.
@@ -742,52 +435,31 @@ function setMapOnAll(map) {
         markersOuter[i].setMap(map);
     }
 }
-
-/**
- * Clearing marker available on array
- */
+// clear markers
 function clearMarkers() {
     setMapOnAll(null);
 }
-
-/**
- * Deleting all marker on map
- */
+// delete all markers
 function deleteMarkers() {
     clearMarkers();
 }
 
-/**
- * Setting info content to the
- * @param name
- * @param imgurl
- * @param info
- * @param item
- * @returns {string}
- */
+// initialize the infowindow
+
+//var infoWindow = new google.maps.infoWindow({
+//    content: infoWindowContent,
+//    maxWidth: 300
+//});
+
 function setInfoWindowContent(name, imgurl, info, item) {
-
-    /**
-     * Variable referencing link
-     */
     var link;
-
-    /**
-     * Creating review link to the info content
-     * if particular marker location has a available review on yelp
-     * the add it otherwise set it to "#"
-     */
+    // creating review link
     if(item.review !== "#"){
         link = '<a href= '+item.review+' target="_blank">'+'Review</a>';
     }else {
         link = "#";
     }
 
-    /**
-     * content variable to display inside info content
-     * of marker
-     * @type {string}
-     */
     var content = '<div id="info_container">' +
         '<div class="content_title">' +name+ '</div>'+
         '<div class="info_content"> '+
@@ -802,10 +474,7 @@ function setInfoWindowContent(name, imgurl, info, item) {
     return content;
 }
 
-/**
- * Searching reference of marker in wikipedia
- * @param placeName name of a marker
- */
+// testing with wikipedia
 function searchWikipedia(placeName) {
 
     var wikiUrl = 'https://en.wikipedia.org/w/api.php?action=opensearch&'+
@@ -814,7 +483,6 @@ function searchWikipedia(placeName) {
     var wikiRequestTimeout = setTimeout(function(){
 
     }, 8000);
-
     $.ajax({
         url:wikiUrl,
         dataType: 'jsonp',
@@ -830,16 +498,14 @@ function searchWikipedia(placeName) {
         }
     });
 
+
 }
+// flickr
 
 
-/**
- * Searching image url of cliked marker item
- * @param searchItem
- * @returns {*}
- */
 function searchFlickr(searchItem) {
 
+    //var Flickurl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&";
     var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&tags='
         +searchItem.name+'&per_page=1&format=json';
     var result;
@@ -879,13 +545,10 @@ function searchFlickr(searchItem) {
     return result;
 }
 
+// handling list click
 
-/**
- * marker clicked listener
- * @param clickedItem marker clicked
- * @param position the index of the marker
- */
 function handleListClicked(clickedItem, position) {
+
 
     var item = searchedItem()[position];
     var len = markersOuter.length;
@@ -905,9 +568,9 @@ function handleListClicked(clickedItem, position) {
         pos = 0;
     }
 
-    /**
-     * display info content to the clicked marker
-     */
+    //console.log("pos "+pos);
+    // ,toggleBounce(markersOuter[pos])
+
     google.maps.event.trigger(markersOuter[pos],'click');
 
 }
@@ -921,9 +584,7 @@ function toggleBounce(mMarker) {
     }
 }
 
-/**
- * adding clicked listener to the observable list
- */
+
 function addListListener() {
 
     $("#marker_list li").click(function() {
@@ -932,9 +593,6 @@ function addListListener() {
     });
 }
 
-/**
- * disabling function when user press enter on input
- */
 function disableOnEnterPress() {
 
     $('#pac-input').on('keyup keypress', function(e) {
@@ -946,9 +604,6 @@ function disableOnEnterPress() {
     });
 }
 
-/**
- * action listener of go button
- */
 function loadButton() {
     $('.go_button').onclick()
 }
@@ -974,6 +629,7 @@ function counterMarker(functionName) {
     } else if(functionName === 'yelp') {
         counterYelp++;
     }
+    //counterWiki == searchedItem().length &&
 
     if(counterFlickr == searchedItem().length &&
 
@@ -982,35 +638,29 @@ function counterMarker(functionName) {
         for(var i=0; i<searchedItem().length;i++) {
             var items = searchedItem()[i];
 
-            /**
-             * adding info content
-             */
+            // adding info content
             addMarkerSearch(items.name,markersOuter[i],items.imgUrl, items.info, items);
         }
-
         counterFlickr = 0;
         counterWiki = 0;
         counterYelp = 0;
     }
 }
 
-/**
- * Searching review using yelp business search api
- * @param business the name of the bussiness to tsearch
-*/
-function yelpBusinessSearch(business) {
 
-    /**
-     * Need a way to hiding consumer key and token
-     * yet not implemented
-     * @type {string}
-     */
+
+
+function yelpBusinessSearch(bussiness) {
+
+
+    // need a way to hiding consumer key and token
+
     var consumer_key = "n7Xp4IsnMZLAVuuyVjz-hA";
     var consumer_secret = "KUbgJZlaNi69BKOVII5iI-QC-aI";
     var token = "RB_d80kXSa3sHeiEW7_tBBH2-DAfp572";
     var token_secret = "60tGsaUF8Sn4jDy4vI4ySYxn5yU";
     var YELP_BASE_URL ='https://api.yelp.com/v2/business/'; // search /?location=
-    var src = business.name.replace(/ /g, "-")+'-london';//'city-arms-coventry';//
+    var src = bussiness.name.replace(/ /g, "-")+'-london';//'city-arms-coventry';//
 
     var yelp_url = YELP_BASE_URL+src;//+ self.selected_place().Yelp.business_id;
 
@@ -1040,59 +690,29 @@ function yelpBusinessSearch(business) {
             }
         },
         success: function(results) {
-            business.setReview(results.mobile_url);
+            // Do stuff with results
+            bussiness.setReview(results.mobile_url);
             counterMarker('yelp');
         },
 
         error: function() {
             // Do stuff on fail
-        }
+        } ,
 
-    }
+    };
 
-	try {
 
-        /**
-         * if fail call the counter
-         */
+
+
+    try {
+        // if fail call the counter
         $.ajax(settings).fail( function(jqXHR, textStatus, errorThrown) {
             counterMarker('yelp');
-            business.setReview("#");
+            bussiness.setReview("#");
         });
 
     } catch(err) {
         console.log(" error "+err);
     }
-	
 }
-
-
-	/**
-	* Function for getting city name when 
-	* latitude and longitude is provided
-	*/
-	function reverseGeocoding(latLang) {
-		geocoder.geocode({'location': latLang}, function(results, status){
-		
-			if (status === google.maps.GeocoderStatus.OK) {
-
-				console.log("Geocoder location found " + JSON.stringify(results));
-				
-				$.each(results, function(i, val) {
-					$.each(val.types, function(j, item) {
-						
-						if(item === 'postal_town') {
-							console.log("Item.type "+ item);
-							console.log("Address "+ val.formatted_address);
-							return false;
-						}
-					});
-				});
-				//console.log(JSON.stringify(results));
-			} else {
-				console.log("Error on getting status ");
-			}
-			
-		});
-	}
 
