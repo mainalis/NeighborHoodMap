@@ -28,6 +28,11 @@ var searchBox;
 var searchedItem = ko.observableArray();
 
 /**
+ * Instance variable used on local search
+ */
+var localSearchContent = ko.observableArray();
+
+/**
  * Array storing marker of the map
  * @type {Array}
  */
@@ -73,6 +78,8 @@ var input;
 * reference variable to google geocoder object
 */
 var geocoder;
+
+
 
 /**
  * Class for storing marker's information avaliable on map
@@ -253,7 +260,7 @@ function initialize() {
 				if(input.value.length > 0) {
 					 searchOnMap(input.value);
 				} else {
-						
+                     addToMap();
 				}				
             }
         }
@@ -310,7 +317,11 @@ function initialize() {
          * which is use in yelp  business search call
          */
 		reverseGeocoding( new google.maps.LatLng(places[0].geometry.location.lat(),
-                places[0].geometry.location.lng()) );
+                places[0].geometry.location.lng()) , function(cityLoc){
+
+            console.log("City "+cityLoc[0]);
+            console.log(" 323 Country "+cityLoc[1]);
+        });
 
         /**
          * calling processSearchEntry to adding
@@ -433,8 +444,8 @@ function createMarker() {
     /**
      * Iterating through the list of places
      */
-    for(var i=0; i<searchedItem().length;i++) {
-        var items = searchedItem()[i];
+    for(var i=0; i<localSearchContent().length;i++) {
+        var items = localSearchContent()[i];
         markersOuter.push( new google.maps.Marker({
             map: map,
             position: items.locations,
@@ -515,7 +526,8 @@ function processSearchEntry(searchValue) {
      * removing content of searchedItem
      * if there exists any
      */
-    searchedItem.removeAll();
+    //searchedItem.removeAll();
+    localSearchContent.removeAll();
 
     /**
      * Iterating through the content of observable list
@@ -535,7 +547,7 @@ function processSearchEntry(searchValue) {
         /**
          * Adding MapItem object to the observable list
          */
-        searchedItem.push(item);
+        localSearchContent.push(item);
 
         /**
          * searching contents of info window
@@ -546,19 +558,29 @@ function processSearchEntry(searchValue) {
         /**
          * Searching image from flickr
          */
-        searchFlickr(searchedItem()[i]);
+        //searchFlickr(searchedItem()[i]);
+        searchFlickr(localSearchContent()[i]);
 
         /**
          * Searching business review from yelp
          */
-        yelpBusinessSearch(searchedItem()[i]);
+        //yelpBusinessSearch(searchedItem()[i]);
+        yelpBusinessSearch(localSearchContent()[i]);
 
         /**
          * Wikipedia search , this search is
          * not used in this application
          */
-        searchWikipedia(searchedItem()[i])
+        //searchWikipedia(searchedItem()[i]);
+        searchWikipedia(localSearchContent()[i])
     }
+
+    /**
+     * adding local list to main list
+     */
+
+
+    searchedItem(localSearchContent().slice());
 
     /**
      * adding listener to the observable list
@@ -577,7 +599,7 @@ function searchOnMap(searchText) {
      * delete the marker that currently
      * present on map
      */
-   
+    deleteMarkers();
 
     /**
      * Name of the marker
@@ -598,12 +620,15 @@ function searchOnMap(searchText) {
      * observable array reference
      */
     var tempObs = ko.observableArray();
+    searchedItem.removeAll();
+    searchedItem((localSearchContent().slice()));
 
     /**
      * information of marker reference
      */
     var info;
-	var indicies = [];
+
+    var indices = [];
 
     /**
      * Iterating through the available
@@ -616,38 +641,20 @@ function searchOnMap(searchText) {
          * if it match the criteria then add
          * it to the observable list
          */
-        if( searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())) {
 
-        /*   var items = searchedItem()[i].locations;
-           mName = searchedItem()[i].name;
-           imUrl = searchedItem()[i].imgUrl;
-           info = searchedItem()[i].info;
-           map.setCenter(searchedItem()[i].locations);
-		   
-           marker = new google.maps.Marker({
-                map: map,
-                position: searchedItem()[i].locations,
-				animation: google.maps.Animation.DROP
-            });
+        //console.log(searchedItem()[i].name.toLowerCase() + " "+ searchText.toLowerCase());
+        //searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())
+        // /^(searchedItem()[i].name.toLowerCase())$/.test(searchedItem()[i].name.toLowerCase())
+        if(searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())) {
 
-            /**
-             * adding marker to the marker's array list
-             */
-        //    markersOuter.push(marker);
-
-            /**
-             * adding content to the searched marker
-             * info content
-             */
-       //     addMarkerSearch(mName,marker,imUrl, info, searchedItem()[i]);
             //deleteMarkers();
-
+            console.log(" ------- "+ searchedItem()[i].name.toLowerCase() + " "+ searchText.toLowerCase());
+            console.log(" the length of ")
             /**
              * Adding MapItem to the observable array
              */
             tempObs.push(searchedItem()[i]);
-			indicies.push(i);
-			
+            indices.push(i);
         }
 
     }
@@ -660,27 +667,21 @@ function searchOnMap(searchText) {
      * greater than 0 do the further processing
      */
     if(tempObs().length > 0) {
-		deleteMarkers();
         searchedItem.removeAll();
         searchedItem((tempObs().slice()));
         /**
          * adding listener to the new observable list
          */
         addListListener();
+
     }
 
 	for(var i=0; i<tempObs().length; i++) {
+
 		var mapItem = tempObs()[i];
-		console.log("inside search");
-		 marker = new google.maps.Marker({
-				map: map,
-                position: mapItem.locations,
-				animation: google.maps.Animation.DROP
-            });
+        markersOuter[indices[i]].setMap(map);
 		map.setCenter(mapItem.locations);
-		markersOuter.push(marker);
-		//marker.setMap(map);
-		addMarkerSearch(mapItem.name, marker ,mapItem.imgUrl, "", mapItem);
+
 	}
 	
 	
@@ -741,6 +742,9 @@ function setMapOnAll(map) {
     for (var i = 0; i < markersOuter.length; i++) {
         markersOuter[i].setMap(map);
     }
+    $.each(markersOuter, function(index, val){
+        val.setMap(map);
+    });
 }
 
 /**
@@ -754,7 +758,9 @@ function clearMarkers() {
  * Deleting all marker on map
  */
 function deleteMarkers() {
-    clearMarkers();
+    $.each(markersOuter, function(index, val){
+        val.setMap(null);
+    });
 }
 
 /**
@@ -1071,28 +1077,62 @@ function yelpBusinessSearch(business) {
 	* Function for getting city name when 
 	* latitude and longitude is provided
 	*/
-	function reverseGeocoding(latLang) {
+	function reverseGeocoding(latLang, callB) {
+
+
 		geocoder.geocode({'location': latLang}, function(results, status){
 		
 			if (status === google.maps.GeocoderStatus.OK) {
 
-				console.log("Geocoder location found " + JSON.stringify(results));
-				
+				//console.log("Geocoder location found " + JSON.stringify(results));
+				var cityLoc = [];
 				$.each(results, function(i, val) {
 					$.each(val.types, function(j, item) {
-						
+                        var country = "aa";
+                        var city = "bb";
 						if(item === 'postal_town') {
-							console.log("Item.type "+ item);
-							console.log("Address "+ val.formatted_address);
-							return false;
-						}
+							//console.log("Item.type "+ item);
+							//console.log("Address "+ val.formatted_address);
+							//return false;
+						} else if(item === 'country') {
+                            //country = val.formatted_address;
+                            //console.log("country "+ country);
+                            cityLoc.push(val.formatted_address);
+                        } else if(item === 'administrative_area_level_1') {
+                            //city = val.formatted_address;
+                            //console.log("city "+ city);
+                            cityLoc.push(val.formatted_address);
+                        }
+                        if(cityLoc.length >= 2) {
+
+                        }
+
 					});
 				});
-				//console.log(JSON.stringify(results));
+                callB(cityLoc);
 			} else {
 				console.log("Error on getting status ");
 			}
 			
 		});
+
+
+
 	}
+
+
+function addToMap() {
+    searchedItem.removeAll();
+    deleteMarkers();
+
+    searchedItem((localSearchContent().slice()));
+
+    $.each(markersOuter, function(index, val){
+        val.setMap(map);
+    });
+
+    addListListener();
+}
+
+
 
