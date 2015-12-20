@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/bootstrap-theme.min.css">
-    <title>NeighborHood Map</title>
+    <title>Neighbourhood Map</title>
     <link rel="stylesheet" href="css/main.css">
     <script type="text/javascript" src="js/knockout-3.3.0.js"></script>
 
@@ -31,17 +31,17 @@
         <div class="box">
             <div class="container-3">
                 <span class="icon glyphicon glyphicon-search"><i class="fa fa-search"></i></span>
-                <input type="search" id="pac-input" class="controls"  placeholder="Search..." />
-                <button class="go_button">Go</button>
+                <input type="search" id="pac-input" class="controls"  placeholder="Search..." data-bind="value: inputBox,valueUpdate: 'keyup' "/>
+                <button class="go_button" data-bind="click: goButtonEvent">Go</button>
             </div>
         </div>
         <div id="check_box">
-            <input id = "list_search" type="checkbox"> Local Search
-            <input id = "google_search" type="checkbox"> Google Serch <br>
+            <input type="radio"  value="local" data-bind="checked: search" /> Local Search
+            <input type="radio"  value="google" data-bind="checked: search" /> Google Search
         </div>
 
         <div id="knockout">
-            <h4  data-bind="html : getName()"></h4>
+
             <ul id="marker_list" data-bind="foreach: sItem" >
                 <li data-bind="text: name"> </li>
             </ul>
@@ -59,7 +59,6 @@
         src = "https://maps.googleapis.com/maps/api/js?signed_in=true&libraries=places&callback=initialize" async defer></script>
 
 
-<!-- <script type="text/javascript" src="js/viewModel.js"></script> -->
 <script type="text/javascript" src="js/map.js"></script>
 
 <body>

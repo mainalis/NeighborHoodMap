@@ -28,6 +28,18 @@ var searchBox;
 var searchedItem = ko.observableArray();
 
 /**
+ * model to input box
+ */
+
+var searchText = ko.observable();
+
+/**
+ * radio model
+ */
+
+var serarchType = ko.observable("local");
+
+/**
  * Instance variable used on local search
  */
 var localSearchContent = ko.observableArray();
@@ -65,7 +77,7 @@ var counterYelp = 0;
 var listSearch;
 
 /**
- * google search checkbox reference
+ * Google search checkbox reference
  */
 var googleSearch;
 
@@ -78,6 +90,16 @@ var input;
 * reference variable to google geocoder object
 */
 var geocoder;
+
+/**
+* Current location of yelp
+**/
+var yelpLocation = "-london";
+
+/**
+ * Variable to store place search from google.
+ */
+var places;
 
 
 
@@ -205,7 +227,10 @@ function initialize() {
      * Google map places searchbox object reference
      * @type {google.maps.places.SearchBox}
      */
-    searchBox = new google.maps.places.SearchBox(input);
+    //searchBox = new google.maps.places.SearchBox(input);
+	
+	
+
 
     /**
      * Google map's  map object reference
@@ -238,14 +263,14 @@ function initialize() {
      * adding action listener for map bounds
      * and attached it to search box
      */
-    map.addListener('bounds_changed', function() {
+  /*  map.addListener('bounds_changed', function() {
         searchBox.setBounds(map.getBounds());
     });
-
+ */
     var markers = [];
 
 
-    //keyup action listener
+
     /**
      * Input box action listener
      */
@@ -255,10 +280,10 @@ function initialize() {
             e.preventDefault();
             return false;
         }else{
-            if(listSearch.prop('checked')){
+            if(serarchType() == "local"){
 
-				if(input.value.length > 0) {
-					 searchOnMap(input.value);
+				if(searchText().length> 0) {
+					 searchOnMap(searchText());
 				} else {
                      addToMap();
 				}				
@@ -266,137 +291,6 @@ function initialize() {
         }
     });
 
-    /**
-     * Input on focus action listener
-     */
-    input.onfocus = function() {
-      console.log("Getting search box onfocous "+ input.value);
-    };
-
-
-    /**
-     *  go button press action listener
-     */
-    $('.go_button').click(function() {
-
-        /**
-         * getting place from entered text
-         * using google map place search api
-         */
-        var places = searchBox.getPlaces();
-
-        /**
-         * if searched result is zero
-         */
-        if (places.length == 0) {
-            return;
-        }
-
-        /**
-         * if searched place length is 1
-         */
-        if(places.length == 1) {
-
-            latLng = new google.maps.LatLng(places[0].geometry.location.G, places[0].geometry.location.K);
-            //service.nearbySearch(mrequest, callback);
-        }
-
-        /**
-         * clearing array holding markers
-         * @type {Array}
-         */
-        markersOuter = [];
-
-        // clear all old markers
-        //markersOuter.forEach(function(marker) {
-        //    marker.setMap(null);
-        //});
-
-        /**
-         * calling reversGecoding to get the name of city
-         * which is use in yelp  business search call
-         */
-		reverseGeocoding( new google.maps.LatLng(places[0].geometry.location.lat(),
-                places[0].geometry.location.lng()) , function(cityLoc){
-
-            console.log("City "+cityLoc[0]);
-            console.log(" 323 Country "+cityLoc[1]);
-        });
-
-        /**
-         * calling processSearchEntry to adding
-         * searched item to the list
-         */
-        processSearchEntry(places);
-
-        /**
-         * Getting bounds to the map
-         * @type {google.maps.LatLngBounds}
-         */
-        var bounds = new google.maps.LatLngBounds();
-
-        /**
-         * Iterating through avaliable searched item
-         * and adding it to the markersOuter array
-         */
-        places.forEach(function(place) {
-
-            var icon = {
-                url: place.icon,
-                size: new google.maps.Size(35,35),
-                origin: new google.maps.Point(0, 0),
-                anchor: new google.maps.Point(8, 17),
-                scaledSize: new google.maps.Size(15,15)
-            };
-
-            markersOuter.push(new google.maps.Marker({
-                map: map,
-                //icon: icon,
-                title: place.name,
-                position: place.geometry.location,
-                animation: google.maps.Animation.DROP,
-                myIndex: markersOuter.length
-            }) );
-
-            // binding the action listener to the markers
-            //bindMarkerListener(place,map,tempMarker);
-
-            if (place.geometry.viewport) {
-                // only geocodes have view port
-                bounds.union(place.geometry.viewport);
-            } else {
-                bounds.extend(place.geometry.location);
-            }
-
-        });
-
-        map.fitBounds(bounds);
-
-    });
-
-    /**
-     * listsearch change action listener
-     * of local search check box
-     */
-    listSearch.change(function(){
-        if(this.checked) {
-            googleSearch.prop('checked',false);
-            disableGoogleAutoComplete();
-        }
-    });
-
-    /**
-     * google search action listener
-     * of google search check box
-     */
-    googleSearch.change(function(){
-        if(this.checked){
-            listSearch.prop('checked', false);
-            enableGoogleAutoComplete();
-        } else {
-            disableGoogleAutoComplete();
-        }
-    });
 
 }
 
@@ -412,6 +306,22 @@ function disableGoogleAutoComplete() {
  */
 function enableGoogleAutoComplete() {
     searchBox = new google.maps.places.SearchBox(input);
+	google.maps.event.addListener(searchBox, 'places_changed', function() {
+		places = searchBox.getPlaces();
+		if (places.length == 0) {
+		  return;
+		}
+
+		    /**
+         * calling reversGecoding to get the name of city
+         * which is use in yelp  business search call
+         */
+		reverseGeocoding( new google.maps.LatLng(places[0].geometry.location.lat(),
+                places[0].geometry.location.lng()) , function(cityLoc){
+			yelpLocation = "-"+cityLoc[0].split(",")[0].toLowerCase();
+        });
+		
+	});
 }
 
 /**
@@ -558,7 +468,6 @@ function processSearchEntry(searchValue) {
         /**
          * Searching image from flickr
          */
-        //searchFlickr(searchedItem()[i]);
         searchFlickr(localSearchContent()[i]);
 
         /**
@@ -595,38 +504,21 @@ function processSearchEntry(searchValue) {
  * @param searchText
  */
 function searchOnMap(searchText) {
-    /**
-     * delete the marker that currently
-     * present on map
-     */
-    deleteMarkers();
 
-    /**
-     * Name of the marker
-     */
-    var mName;
-
-    /**
-     * Marker object reference
-     */
-    var marker;
-
-    /**
-     * Image url reference
-     */
-    var imUrl;
-
-    /**
-     * observable array reference
-     */
+	/**
+	* Observable array for local search
+	**/
     var tempObs = ko.observableArray();
     searchedItem.removeAll();
     searchedItem((localSearchContent().slice()));
 
+
+    console.log("search on map is called "+searchText);
+
     /**
      * information of marker reference
      */
-    var info;
+    var name;
 
     var indices = [];
 
@@ -642,14 +534,8 @@ function searchOnMap(searchText) {
          * it to the observable list
          */
 
-        //console.log(searchedItem()[i].name.toLowerCase() + " "+ searchText.toLowerCase());
-        //searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())
-        // /^(searchedItem()[i].name.toLowerCase())$/.test(searchedItem()[i].name.toLowerCase())
-        if(searchText.length > 1 && searchedItem()[i].name.toLowerCase().startsWith(searchText.toLowerCase())) {
-
-            //deleteMarkers();
-            console.log(" ------- "+ searchedItem()[i].name.toLowerCase() + " "+ searchText.toLowerCase());
-            console.log(" the length of ")
+        name = searchedItem()[i].name;
+        if(searchText.length > 1 && name.toLowerCase().startsWith(searchText)) {
             /**
              * Adding MapItem to the observable array
              */
@@ -667,6 +553,7 @@ function searchOnMap(searchText) {
      * greater than 0 do the further processing
      */
     if(tempObs().length > 0) {
+
         searchedItem.removeAll();
         searchedItem((tempObs().slice()));
         /**
@@ -722,8 +609,13 @@ function addMarkerSearch(name, marker, imgurl, info, item) {
  */
 function ViewModel() {
     var self = this;
-    self.name = "Searched Location";
     self.sItem = searchedItem;
+    self.inputBox  = searchText;
+    self.search = serarchType;
+    self.goButtonEvent = function() {
+        console.log("handle go click")
+        handleGoButtonClick();
+    }
 }
 
 /**
@@ -732,10 +624,33 @@ function ViewModel() {
  */
 var viewModel = new ViewModel();
 
+
 /**
- * Binding view mode to the DOM
+ *
+ * Subscriber for observer
  */
-ko.applyBindings(viewModel,  document.getElementById('marker_list'));
+
+viewModel.search.subscribe(function(newValue){
+
+
+    if(newValue == 'google') {
+        enableGoogleAutoComplete();
+        viewModel.inputBox (" ");
+
+
+    } else {
+
+        disableGoogleAutoComplete();
+        viewModel.inputBox(" ");
+    }
+});
+
+/**
+ * Binding view model to the DOM
+ */
+ko.applyBindings(viewModel); //document.getElementById('marker_list')
+//ko.applyBindings({ searchText: ko.observable("ssss") });
+
 
 // Sets the map on all markers in the array.
 function setMapOnAll(map) {
@@ -786,7 +701,7 @@ function setInfoWindowContent(name, imgurl, info, item) {
     if(item.review !== "#"){
         link = '<a href= '+item.review+' target="_blank">'+'Review</a>';
     }else {
-        link = "#";
+        link = "Not Available";
     }
 
     /**
@@ -819,7 +734,7 @@ function searchWikipedia(placeName) {
 
     var wikiRequestTimeout = setTimeout(function(){
 
-    }, 8000);
+    }, 2000);
 
     $.ajax({
         url:wikiUrl,
@@ -827,7 +742,6 @@ function searchWikipedia(placeName) {
         type: 'GET',
         contentType: "application/json; charset=utf-8",
         success: function(data, status, xhr) {
-            //console.log("Data "+data);
             var articleList = data[0];
             var url = 'http://en.wikipedia.org/wiki/'+articleList;
             placeName.info = url;
@@ -849,7 +763,8 @@ function searchFlickr(searchItem) {
     var flickrUrl = 'https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=8ff629a31a05d902a75b1d86d9b05730&tags='
         +searchItem.name+'&per_page=1&format=json';
     var result;
-
+    var flickrRequestTimeout = setTimeout(function(){
+    }, 3000);
 
         $.ajax({
             url: flickrUrl,
@@ -875,7 +790,7 @@ function searchFlickr(searchItem) {
                 }
 
                 counterMarker('flickr');
-
+                clearTimeout(flickrRequestTimeout);
             },
             error: function(request, error) {
 
@@ -918,6 +833,10 @@ function handleListClicked(clickedItem, position) {
 
 }
 
+/**
+ * marker bouncing animation
+ * @param mMarker
+ */
 function toggleBounce(mMarker) {
 
     if (mMarker.getAnimation() !== null) {
@@ -952,12 +871,6 @@ function disableOnEnterPress() {
     });
 }
 
-/**
- * action listener of go button
- */
-function loadButton() {
-    $('.go_button').onclick()
-}
 
 
 function nonce_generate() {
@@ -1015,10 +928,9 @@ function yelpBusinessSearch(business) {
     var consumer_secret = "KUbgJZlaNi69BKOVII5iI-QC-aI";
     var token = "RB_d80kXSa3sHeiEW7_tBBH2-DAfp572";
     var token_secret = "60tGsaUF8Sn4jDy4vI4ySYxn5yU";
-    var YELP_BASE_URL ='https://api.yelp.com/v2/business/'; // search /?location=
-    var src = business.name.replace(/ /g, "-")+'-london';//'city-arms-coventry';//
-
-    var yelp_url = YELP_BASE_URL+src;//+ self.selected_place().Yelp.business_id;
+    var YELP_BASE_URL ='https://api.yelp.com/v2/business/';
+    var src = business.name.replace(/ /g, "-") +  yelpLocation.replace(/ /g, "-");
+    var yelp_url = YELP_BASE_URL + src;
 
     var parameters = {
         oauth_consumer_key: consumer_key,
@@ -1040,87 +952,84 @@ function yelpBusinessSearch(business) {
         cache: true,                // This is crucial to include as well to prevent jQuery from adding on a cache-buster parameter "_=23489489749837", invalidating our oauth-signature
         dataType: 'jsonp',
         crossDomain: true,
-        statusCode: {
-            400 : function(xhr) {
-                console.log("400 catch");
-            }
-        },
+        timeout: 1000,
         success: function(results) {
             business.setReview(results.mobile_url);
             counterMarker('yelp');
         },
-
-        error: function() {
-            // Do stuff on fail
+        complete: function(xhr, data) {
+            if (xhr.status != 0)
+                console.log('success');
+            else
+                console.log('fail');
         }
 
     }
 
-	try {
 
-        /**
-         * if fail call the counter
-         */
-        $.ajax(settings).fail( function(jqXHR, textStatus, errorThrown) {
+        //$.ajax(settings).fail( function(jqXHR, textStatus, errorThrown) {
+        //    counterMarker('yelp');
+        //    business.setReview("#");
+        //});
+
+    $.ajax(settings)
+        .done(function() { })
+        .fail(function() {
             counterMarker('yelp');
             business.setReview("#");
         });
 
-    } catch(err) {
-        console.log(" error "+err);
-    }
 	
 }
 
 
-	/**
-	* Function for getting city name when 
-	* latitude and longitude is provided
-	*/
-	function reverseGeocoding(latLang, callB) {
+/**
+ * Function for getting city name when
+ * latitude and longitude is provided
+ */
+function reverseGeocoding(latLang, callB) {
 
 
-		geocoder.geocode({'location': latLang}, function(results, status){
-		
-			if (status === google.maps.GeocoderStatus.OK) {
+    geocoder.geocode({'location': latLang}, function(results, status){
 
-				//console.log("Geocoder location found " + JSON.stringify(results));
-				var cityLoc = [];
-				$.each(results, function(i, val) {
-					$.each(val.types, function(j, item) {
-                        var country = "aa";
-                        var city = "bb";
-						if(item === 'postal_town') {
-							//console.log("Item.type "+ item);
-							//console.log("Address "+ val.formatted_address);
-							//return false;
-						} else if(item === 'country') {
-                            //country = val.formatted_address;
-                            //console.log("country "+ country);
-                            cityLoc.push(val.formatted_address);
-                        } else if(item === 'administrative_area_level_1') {
-                            //city = val.formatted_address;
-                            //console.log("city "+ city);
-                            cityLoc.push(val.formatted_address);
-                        }
-                        if(cityLoc.length >= 2) {
+        if (status === google.maps.GeocoderStatus.OK) {
+            /**
+             * Instance variable for storing
+             * city, country, region name
+             **/
+            //console.log("result "+ JSON.stringify(results));
+            var cityLoc = [];
+            $.each(results, function(i, val) {
+                $.each(val.types, function(j, item) {
+                    if(item === 'postal_town') {
+                        cityLoc.push(val.formatted_address);
+                        yelpLocation = "-"+val.formatted_address.split(",")[0].toLowerCase();
+                    } else if(item === 'country') {
+                        cityLoc.push(val.formatted_address);
+                    } else if(item === 'administrative_area_level_1') {
+                        cityLoc.push(val.formatted_address);
+                    }
+                });
+            });
 
-                        }
+            /**
+             *calling callback
+             **/
+            callB(cityLoc);
+        } else {
+            // handle error
+        }
 
-					});
-				});
-                callB(cityLoc);
-			} else {
-				console.log("Error on getting status ");
-			}
-			
-		});
+    });
 
 
 
-	}
+}
 
-
+/**
+ * function used by local search
+ * to add marker on map
+ */
 function addToMap() {
     searchedItem.removeAll();
     deleteMarkers();
@@ -1134,5 +1043,83 @@ function addToMap() {
     addListListener();
 }
 
+
+function handleGoButtonClick() {
+    /**
+     * getting place from entered text
+     * using google map place search api
+     */
+    //places = searchBox.getPlaces();
+
+    /**
+     * if searched result is zero
+     */
+    if (places.length == 0) { //typeof(places) == 'undefined' ||
+        return;
+    }
+
+    /**
+     * if searched place length is 1
+     */
+    if(places.length == 1) {
+
+        latLng = new google.maps.LatLng(places[0].geometry.location.G, places[0].geometry.location.K);
+        //service.nearbySearch(mrequest, callback);
+    }
+
+    /**
+     * clearing array holding markers
+     * @type {Array}
+     */
+    markersOuter = [];
+
+
+    /**
+     * calling processSearchEntry to adding
+     * searched item to the list
+     */
+    processSearchEntry(places);
+
+    /**
+     * Getting bounds to the map
+     * @type {google.maps.LatLngBounds}
+     */
+    var bounds = new google.maps.LatLngBounds();
+
+    /**
+     * Iterating through avaliable searched item
+     * and adding it to the markersOuter array
+     */
+    places.forEach(function(place) {
+
+        var icon = {
+            url: place.icon,
+            size: new google.maps.Size(35,35),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(8, 17),
+            scaledSize: new google.maps.Size(15,15)
+        };
+
+        markersOuter.push(new google.maps.Marker({
+            map: map,
+            //icon: icon,
+            title: place.name,
+            position: place.geometry.location,
+            animation: google.maps.Animation.DROP,
+            myIndex: markersOuter.length
+        }) );
+
+
+        if (place.geometry.viewport) {
+            // only geocodes have view port
+            bounds.union(place.geometry.viewport);
+        } else {
+            bounds.extend(place.geometry.location);
+        }
+
+    });
+
+    map.fitBounds(bounds);
+}
 
 
